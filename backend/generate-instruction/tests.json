@@ -1,0 +1,35 @@
+{
+  "tests": [
+    {
+      "name": "Generate IOT instruction",
+      "method": "POST",
+      "body": {
+        "type": "iot",
+        "profession": "Электрик",
+        "industry": "Энергетика",
+        "additional_info": "Работа в электроустановках до 1000В"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "title": "string",
+        "content": "string",
+        "profession": "Электрик",
+        "industry": "Энергетика",
+        "type": "iot"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Missing profession field",
+      "method": "POST",
+      "body": {
+        "type": "iot",
+        "industry": "Производство"
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "Profession is required"
+      }
+    }
+  ]
+}

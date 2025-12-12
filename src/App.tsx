@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
+import AssignTraining from '@/components/AssignTraining';
+
+const API_URL = 'https://functions.poehali.dev/26432853-bc16-442a-aabf-e90c33bae6c2';
+const AI_URL = 'https://functions.poehali.dev/be3c82db-379c-4835-a62e-000e73f19cac';
 
 interface Instruction {
   id: string;
@@ -52,6 +56,7 @@ function App() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedIndustry, setSelectedIndustry] = useState<string>('all');
   const [customTopicDialog, setCustomTopicDialog] = useState(false);
+  const [assignTrainingDialog, setAssignTrainingDialog] = useState(false);
   const [testMode, setTestMode] = useState<'practice' | 'exam' | null>(null);
   const [testSession, setTestSession] = useState<TestSession>({
     questions: [],
@@ -61,17 +66,50 @@ function App() {
   });
   const [showProtocol, setShowProtocol] = useState(false);
   const [protocolData, setProtocolData] = useState<any>(null);
+  const [instructions, setInstructions] = useState<Instruction[]>([]);
+  const [stats, setStats] = useState({
+    totalInstructions: 324,
+    activeStudents: 156,
+    completedTests: 892,
+    avgScore: 87
+  });
+  const [generatingInstruction, setGeneratingInstruction] = useState(false);
+  const [aiFormData, setAiFormData] = useState({
+    type: 'iot',
+    profession: '',
+    industry: '',
+    additional_info: ''
+  });
 
-  const [instructions] = useState<Instruction[]>([
-    { id: '1', title: 'ИОТ при работе на высоте', category: 'iot', industry: 'Строительство', profession: 'Монтажник', lastUpdated: '2024-11-15' },
-    { id: '2', title: 'ИОТ для электриков до 1000В', category: 'iot', industry: 'Энергетика', profession: 'Электрик', lastUpdated: '2024-10-20' },
-    { id: '3', title: 'Должностная инструкция инженера ОТ', category: 'job', industry: 'Производство', profession: 'Инженер по ОТ', lastUpdated: '2024-12-01' },
-    { id: '4', title: 'Работа с грузоподъемными кранами', category: 'equipment', industry: 'Производство', profession: 'Крановщик', lastUpdated: '2024-11-28' },
-    { id: '5', title: 'ИОТ при сварочных работах', category: 'iot', industry: 'Производство', profession: 'Сварщик', lastUpdated: '2024-11-10' },
-    { id: '6', title: 'Должностная инструкция мастера участка', category: 'job', industry: 'Производство', profession: 'Мастер', lastUpdated: '2024-10-15' },
-    { id: '7', title: 'Работа с угловой шлифмашиной (болгаркой)', category: 'equipment', industry: 'Производство', profession: 'Слесарь', lastUpdated: '2024-12-05' },
-    { id: '8', title: 'ИОТ в электроустановках', category: 'iot', industry: 'Энергетика', profession: 'Электромонтер', lastUpdated: '2024-11-22' }
-  ]);
+  useEffect(() => {
+    loadInstructions();
+    loadStats();
+  }, []);
+
+  const loadInstructions = async () => {
+    try {
+      const response = await fetch(`${API_URL}?path=instructions`);
+      const data = await response.json();
+      setInstructions(data.instructions || []);
+    } catch (error) {
+      console.error('Failed to load instructions:', error);
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      const response = await fetch(`${API_URL}?path=stats`);
+      const data = await response.json();
+      setStats({
+        totalInstructions: data.totalInstructions || 0,
+        activeStudents: data.activeStudents || 0,
+        completedTests: data.completedTests || 0,
+        avgScore: data.avgScore || 0
+      });
+    } catch (error) {
+      console.error('Failed to load stats:', error);
+    }
+  };
 
   const sampleQuestions: TestQuestion[] = [
     {
@@ -93,13 +131,6 @@ function App() {
       correctAnswer: 3
     }
   ];
-
-  const stats = {
-    totalInstructions: 324,
-    activeStudents: 156,
-    completedTests: 892,
-    avgScore: 87
-  };
 
   const getCategoryIcon = (category: string) => {
     const icons: Record<string, string> = {
@@ -173,8 +204,48 @@ function App() {
     setTestSession(prev => ({ ...prev, status: 'completed' }));
   };
 
-  const generateInstruction = (topic: string) => {
-    console.log('Generating instruction for:', topic);
+  const generateInstruction = async () => {
+    if (!aiFormData.profession) {
+      alert('Укажите профессию или должность');
+      return;
+    }
+
+    setGeneratingInstruction(true);
+
+    try {
+      const response = await fetch(AI_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(aiFormData)
+      });
+
+      if (!response.ok) throw new Error('AI generation failed');
+
+      const data = await response.json();
+
+      await fetch(`${API_URL}?path=instructions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: data.title,
+          category: data.type,
+          industry: data.industry,
+          profession: data.profession,
+          content: data.content,
+          created_by: 1
+        })
+      });
+
+      setCustomTopicDialog(false);
+      setAiFormData({ type: 'iot', profession: '', industry: '', additional_info: '' });
+      await loadInstructions();
+      alert('Инструкция успешно создана!');
+    } catch (error) {
+      console.error('Failed to generate instruction:', error);
+      alert('Ошибка при генерации инструкции. Проверьте API ключ OpenAI.');
+    } finally {
+      setGeneratingInstruction(false);
+    }
   };
 
   return (
@@ -684,9 +755,9 @@ function App() {
                 <p className="text-muted-foreground">Управление учебными программами и назначениями</p>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline">
-                  <Icon name="Upload" className="h-4 w-4 mr-2" />
-                  Загрузить программу
+                <Button variant="outline" onClick={() => setAssignTrainingDialog(true)}>
+                  <Icon name="UserPlus" className="h-4 w-4 mr-2" />
+                  Назначить обучение
                 </Button>
                 <Button>
                   <Icon name="Plus" className="h-4 w-4 mr-2" />
@@ -881,7 +952,7 @@ function App() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Тип инструкции</Label>
-              <Select defaultValue="iot">
+              <Select value={aiFormData.type} onValueChange={(value) => setAiFormData({...aiFormData, type: value})}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -893,28 +964,28 @@ function App() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Профессия / Должность</Label>
-              <Input placeholder="Например: Слесарь-ремонтник" />
+              <Label>Профессия / Должность *</Label>
+              <Input 
+                placeholder="Например: Слесарь-ремонтник"
+                value={aiFormData.profession}
+                onChange={(e) => setAiFormData({...aiFormData, profession: e.target.value})}
+              />
             </div>
             <div className="space-y-2">
               <Label>Отрасль</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Выберите отрасль" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="construction">Строительство</SelectItem>
-                  <SelectItem value="energy">Энергетика</SelectItem>
-                  <SelectItem value="production">Производство</SelectItem>
-                  <SelectItem value="transport">Транспорт</SelectItem>
-                </SelectContent>
-              </Select>
+              <Input 
+                placeholder="Например: Производство"
+                value={aiFormData.industry}
+                onChange={(e) => setAiFormData({...aiFormData, industry: e.target.value})}
+              />
             </div>
             <div className="space-y-2">
               <Label>Дополнительная информация (необязательно)</Label>
               <Textarea 
                 placeholder="Укажите специфические требования, особенности работы, используемое оборудование..."
                 rows={4}
+                value={aiFormData.additional_info}
+                onChange={(e) => setAiFormData({...aiFormData, additional_info: e.target.value})}
               />
             </div>
             <Alert>
@@ -930,13 +1001,20 @@ function App() {
             </Button>
             <Button 
               className="bg-gradient-to-r from-purple-600 to-purple-500"
-              onClick={() => {
-                generateInstruction('custom');
-                setCustomTopicDialog(false);
-              }}
+              onClick={generateInstruction}
+              disabled={generatingInstruction}
             >
-              <Icon name="Wand2" className="h-4 w-4 mr-2" />
-              Сгенерировать
+              {generatingInstruction ? (
+                <>
+                  <Icon name="Loader2" className="h-4 w-4 mr-2 animate-spin" />
+                  Генерация...
+                </>
+              ) : (
+                <>
+                  <Icon name="Wand2" className="h-4 w-4 mr-2" />
+                  Сгенерировать
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1069,6 +1147,15 @@ function App() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Assign Training Dialog */}
+      <AssignTraining 
+        open={assignTrainingDialog}
+        onOpenChange={setAssignTrainingDialog}
+        onAssignmentCreated={() => {
+          loadStats();
+        }}
+      />
     </div>
   );
 }

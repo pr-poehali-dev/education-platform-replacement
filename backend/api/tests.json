@@ -1,0 +1,37 @@
+{
+  "tests": [
+    {
+      "name": "Get all users",
+      "method": "GET",
+      "path": "/?path=users",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "users": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get instructions",
+      "method": "GET",
+      "path": "/?path=instructions",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "instructions": "array"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Get stats",
+      "method": "GET",
+      "path": "/?path=stats",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "activeStudents": "number",
+        "completedTests": "number",
+        "avgScore": "number",
+        "totalInstructions": "number"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
