@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { jsPDF } from 'jspdf';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -169,6 +170,154 @@ export default function DocumentsPage({ onBack }: DocumentsPageProps) {
     setSelectedDocument({ ...selectedDocument, content: updatedContent });
   };
 
+  const handleDownloadDOCX = (doc: Document) => {
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; }
+            h1 { font-size: 24px; font-weight: bold; margin-bottom: 20px; }
+            h2 { font-size: 20px; font-weight: bold; margin-top: 30px; margin-bottom: 15px; }
+            h3 { font-size: 16px; font-weight: bold; margin-top: 20px; margin-bottom: 10px; }
+            p { margin-bottom: 10px; }
+            ul, ol { margin-left: 20px; margin-bottom: 10px; }
+            table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+            th, td { border: 1px solid black; padding: 8px; text-align: left; }
+            th { background-color: #f0f0f0; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          ${markdownToHTML(doc.content)}
+        </body>
+      </html>
+    `;
+
+    const blob = new Blob([htmlContent], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${doc.title}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadPDF = (doc: Document) => {
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const margin = 20;
+    const maxWidth = pageWidth - 2 * margin;
+    let yPosition = margin;
+
+    // Разбиваем текст на строки
+    const lines = doc.content.split('\n');
+
+    lines.forEach((line) => {
+      // Проверяем, нужно ли добавить новую страницу
+      if (yPosition > pageHeight - margin) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+
+      // Определяем стиль текста
+      if (line.startsWith('# ')) {
+        pdf.setFontSize(18);
+        pdf.setFont('helvetica', 'bold');
+        const text = line.replace('# ', '');
+        const splitText = pdf.splitTextToSize(text, maxWidth);
+        pdf.text(splitText, margin, yPosition);
+        yPosition += splitText.length * 10;
+      } else if (line.startsWith('## ')) {
+        pdf.setFontSize(14);
+        pdf.setFont('helvetica', 'bold');
+        const text = line.replace('## ', '');
+        const splitText = pdf.splitTextToSize(text, maxWidth);
+        pdf.text(splitText, margin, yPosition);
+        yPosition += splitText.length * 8;
+      } else if (line.startsWith('### ')) {
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'bold');
+        const text = line.replace('### ', '');
+        const splitText = pdf.splitTextToSize(text, maxWidth);
+        pdf.text(splitText, margin, yPosition);
+        yPosition += splitText.length * 7;
+      } else if (line.trim() === '') {
+        yPosition += 5;
+      } else if (line.startsWith('---')) {
+        pdf.setLineWidth(0.5);
+        pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+        yPosition += 5;
+      } else if (line.startsWith('- ') || line.startsWith('* ')) {
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        const text = '• ' + line.substring(2);
+        const splitText = pdf.splitTextToSize(text, maxWidth - 10);
+        pdf.text(splitText, margin + 5, yPosition);
+        yPosition += splitText.length * 5;
+      } else if (line.match(/^\d+\./)) {
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        const splitText = pdf.splitTextToSize(line, maxWidth - 10);
+        pdf.text(splitText, margin + 5, yPosition);
+        yPosition += splitText.length * 5;
+      } else if (line.startsWith('|')) {
+        // Пропускаем таблицы для упрощения
+        yPosition += 5;
+      } else {
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        const splitText = pdf.splitTextToSize(line, maxWidth);
+        pdf.text(splitText, margin, yPosition);
+        yPosition += splitText.length * 5;
+      }
+    });
+
+    pdf.save(`${doc.title}.pdf`);
+  };
+
+  const markdownToHTML = (markdown: string): string => {
+    let html = markdown;
+
+    // Заголовки
+    html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+    html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+    html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+    // Жирный текст
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+    // Курсив
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+    // Списки
+    html = html.replace(/^- (.+)$/gim, '<li>$1</li>');
+    html = html.replace(/^\* (.+)$/gim, '<li>$1</li>');
+    html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+
+    // Нумерованные списки
+    html = html.replace(/^\d+\. (.+)$/gim, '<li>$1</li>');
+
+    // Горизонтальная линия
+    html = html.replace(/^---$/gim, '<hr />');
+
+    // Таблицы (упрощенная обработка)
+    html = html.replace(/\|(.+)\|/g, (match, content) => {
+      const cells = content.split('|').map((cell: string) => cell.trim());
+      return '<tr>' + cells.map((cell: string) => `<td>${cell}</td>`).join('') + '</tr>';
+    });
+    html = html.replace(/(<tr>.*<\/tr>)/s, '<table>$1</table>');
+
+    // Параграфы
+    html = html.replace(/\n\n/g, '</p><p>');
+    html = '<p>' + html + '</p>';
+
+    return html;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-pink-50">
       <header className="bg-white border-b shadow-sm sticky top-0 z-50">
@@ -280,7 +429,12 @@ export default function DocumentsPage({ onBack }: DocumentsPageProps) {
                         Редактировать
                       </Button>
                     </div>
-                    <Button variant="outline" size="sm" className="w-full">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => handleDownloadDOCX(doc)}
+                    >
                       <Icon name="Download" className="h-4 w-4 mr-2" />
                       Скачать DOCX
                     </Button>
@@ -427,15 +581,27 @@ export default function DocumentsPage({ onBack }: DocumentsPageProps) {
               />
               
               <div className="flex gap-2 mt-4">
-                <Button variant="outline" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => selectedDocument && handleDownloadDOCX(selectedDocument)}
+                >
                   <Icon name="Download" className="h-4 w-4 mr-2" />
                   Скачать DOCX
                 </Button>
-                <Button variant="outline" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => selectedDocument && handleDownloadPDF(selectedDocument)}
+                >
                   <Icon name="FileText" className="h-4 w-4 mr-2" />
                   Экспорт в PDF
                 </Button>
-                <Button variant="outline" className="flex-1">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => window.print()}
+                >
                   <Icon name="Printer" className="h-4 w-4 mr-2" />
                   Печать
                 </Button>
