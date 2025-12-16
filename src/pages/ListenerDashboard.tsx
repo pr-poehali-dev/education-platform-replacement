@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import TestingInterface from '@/components/TestingInterface';
 import { trainingPrograms, getProgramById } from '@/data/trainingPrograms';
 import { getRandomQuestions } from '@/data/testQuestions';
+import { getAllProgramsProgress, getProgramStatus } from '@/utils/progressUtils';
 
 interface TestQuestion {
   id: string;
@@ -34,9 +35,10 @@ interface ListenerDashboardProps {
     listenerId?: string;
   };
   onLogout: () => void;
+  onStartLearning?: (programId: string) => void;
 }
 
-export default function ListenerDashboard({ listener, onLogout }: ListenerDashboardProps) {
+export default function ListenerDashboard({ listener, onLogout, onStartLearning }: ListenerDashboardProps) {
   const [activeTab, setActiveTab] = useState('my-page');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [testMode, setTestMode] = useState<'practice' | 'exam' | null>(null);
@@ -57,15 +59,25 @@ export default function ListenerDashboard({ listener, onLogout }: ListenerDashbo
       const saved = localStorage.getItem(`listener_programs_${listener.listenerId}`);
       if (saved) {
         const programIds = JSON.parse(saved);
+        const progressMap = getAllProgramsProgress(listener.listenerId, programIds);
+        
         const programs = programIds
-          .map((id: string) => getProgramById(id))
-          .filter(Boolean)
-          .map((program: any, index: number) => ({
-            ...program,
-            progress: Math.floor(Math.random() * 100),
-            status: Math.random() > 0.5 ? 'in-progress' : 'not-started',
-            deadline: new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toLocaleDateString('ru-RU')
-          }));
+          .map((id: string) => {
+            const program = getProgramById(id);
+            if (!program) return null;
+            
+            const progress = progressMap.get(id) || 0;
+            const status = getProgramStatus(listener.listenerId!, id);
+            
+            return {
+              ...program,
+              progress,
+              status,
+              deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('ru-RU')
+            };
+          })
+          .filter(Boolean);
+        
         setAssignedPrograms(programs);
       }
     }
@@ -339,36 +351,93 @@ export default function ListenerDashboard({ listener, onLogout }: ListenerDashbo
                 </CardContent>
               </Card>
 
-              {assignedPrograms.length > 0 && (
-                <Card>
+              {assignedPrograms.length > 0 && assignedPrograms.some(p => p.status === 'in-progress') && (
+                <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
                   <CardHeader>
-                    <CardTitle>Активные программы</CardTitle>
-                    <CardDescription>Программы, которые вы проходите сейчас</CardDescription>
+                    <CardTitle className="flex items-center gap-2">
+                      <Icon name="PlayCircle" className="h-5 w-5 text-blue-600" />
+                      Активные программы
+                    </CardTitle>
+                    <CardDescription>Продолжите изучение начатых курсов</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {assignedPrograms.filter(p => p.status === 'in-progress').map((program) => (
-                        <div key={program.id} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <div className={`bg-gradient-to-br ${program.color} p-2 rounded-lg`}>
-                              <Icon name={program.icon} className="h-5 w-5 text-white" />
+                        <Card key={program.id} className="border-2 hover:border-blue-300 transition-all hover:shadow-md cursor-pointer" onClick={() => onStartLearning?.(program.id)}>
+                          <CardContent className="pt-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3 flex-1">
+                                <div className={`bg-gradient-to-br ${program.color} p-2.5 rounded-xl`}>
+                                  <Icon name={program.icon} className="h-5 w-5 text-white" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold text-base">{program.title}</p>
+                                  <div className="flex items-center gap-3 mt-1">
+                                    <p className="text-sm text-muted-foreground">{program.modules?.length || 0} модулей</p>
+                                    <Badge variant="outline" className="text-xs">
+                                      {program.totalHours}ч
+                                    </Badge>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <div className="text-right">
+                                  <p className="text-2xl font-bold text-blue-600">{program.progress}%</p>
+                                  <p className="text-xs text-muted-foreground">завершено</p>
+                                </div>
+                                <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                                  <Icon name="Play" className="h-4 w-4 mr-1" />
+                                  Продолжить
+                                </Button>
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-medium">{program.title}</p>
-                              <p className="text-sm text-muted-foreground">{program.modules?.length || 0} модулей • {program.totalHours} часов</p>
+                            <div className="mt-3">
+                              <Progress value={program.progress} className="h-2" />
                             </div>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <div className="text-right">
-                              <p className="text-2xl font-bold">{program.progress}%</p>
-                              <p className="text-xs text-muted-foreground">Прогресс</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {assignedPrograms.length > 0 && assignedPrograms.some(p => p.status === 'not-started') && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Icon name="BookOpen" className="h-5 w-5" />
+                      Новые программы
+                    </CardTitle>
+                    <CardDescription>Начните изучение новых курсов</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid md:grid-cols-2 gap-3">
+                      {assignedPrograms.filter(p => p.status === 'not-started').map((program) => (
+                        <Card key={program.id} className="hover:shadow-md transition-all cursor-pointer border-2 hover:border-green-300" onClick={() => onStartLearning?.(program.id)}>
+                          <CardContent className="pt-4">
+                            <div className="flex items-start gap-3">
+                              <div className={`bg-gradient-to-br ${program.color} p-2 rounded-lg`}>
+                                <Icon name={program.icon} className="h-5 w-5 text-white" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm line-clamp-2">{program.title}</p>
+                                <div className="flex items-center gap-2 mt-2">
+                                  <Badge variant="outline" className="text-xs">
+                                    {program.modules?.length} модулей
+                                  </Badge>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {program.totalHours}ч
+                                  </Badge>
+                                </div>
+                                <Button size="sm" className="w-full mt-3" variant="outline">
+                                  <Icon name="Play" className="h-3 w-3 mr-1" />
+                                  Начать
+                                </Button>
+                              </div>
                             </div>
-                            <Button size="sm" onClick={() => setActiveTab('programs')}>
-                              <Icon name="Play" className="h-4 w-4 mr-1" />
-                              Продолжить
-                            </Button>
-                          </div>
-                        </div>
+                          </CardContent>
+                        </Card>
                       ))}
                     </div>
                   </CardContent>
@@ -423,9 +492,10 @@ export default function ListenerDashboard({ listener, onLogout }: ListenerDashbo
                         <Button 
                           className="w-full mt-4" 
                           disabled={program.status === 'completed'}
+                          onClick={() => onStartLearning?.(program.id)}
                         >
                           <Icon name={program.status === 'completed' ? 'Check' : 'Play'} className="h-4 w-4 mr-2" />
-                          {program.status === 'completed' ? 'Завершено' : program.status === 'in-progress' ? 'Продолжить' : 'Начать обучение'}
+                          {program.status === 'completed' ? 'Завершено' : program.status === 'in-progress' ? 'Продолжить обучение' : 'Начать обучение'}
                         </Button>
                       </div>
                     </CardContent>

@@ -13,6 +13,7 @@ import ListenerDashboard from '@/pages/ListenerDashboard';
 import ListenersManagement from '@/pages/ListenersManagement';
 import ListenerProgramsSetup from '@/pages/ListenerProgramsSetup';
 import AdminManagement from '@/pages/AdminManagement';
+import ModuleLearning from '@/pages/ModuleLearning';
 
 type UserRole = 'admin' | 'listener' | null;
 
@@ -43,11 +44,13 @@ type CurrentView =
   | 'listener-dashboard'
   | 'listeners-management'
   | 'listener-programs-setup'
-  | 'admin-management';
+  | 'admin-management'
+  | 'module-learning';
 
 function App() {
   const [currentView, setCurrentView] = useState<CurrentView>('admin-auth');
   const [userRole, setUserRole] = useState<UserRole>(null);
+  const [selectedProgramId, setSelectedProgramId] = useState<string | null>(null);
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
   const [listenerUser, setListenerUser] = useState<ListenerUser | null>(null);
   const [selectedListenerId, setSelectedListenerId] = useState<string | null>(null);
@@ -199,6 +202,10 @@ function App() {
       <ListenerDashboard
         listener={listenerUser}
         onLogout={handleLogout}
+        onStartLearning={(programId) => {
+          setSelectedProgramId(programId);
+          setCurrentView('module-learning');
+        }}
       />
     );
   }
@@ -219,6 +226,19 @@ function App() {
         listenerId={selectedListenerId}
         onBack={() => setCurrentView('listeners-management')}
         onSave={handleSaveListenerPrograms}
+      />
+    );
+  }
+
+  if (currentView === 'module-learning' && selectedProgramId && listenerUser?.listenerId) {
+    return (
+      <ModuleLearning
+        programId={selectedProgramId}
+        listenerId={listenerUser.listenerId}
+        onBack={() => setCurrentView('listener-dashboard')}
+        onComplete={() => {
+          setCurrentView('listener-dashboard');
+        }}
       />
     );
   }
