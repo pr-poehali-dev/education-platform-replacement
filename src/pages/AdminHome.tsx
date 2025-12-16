@@ -25,7 +25,7 @@ export default function AdminHome({ user, onLogout, onNavigate }: AdminHomeProps
       description: 'База знаний по охране труда и пожарной безопасности',
       icon: 'BookOpen',
       color: 'from-blue-500 to-cyan-500',
-      stats: '324 инструкции'
+      stats: '0 инструкций'
     },
     {
       id: 'programs',
@@ -33,7 +33,7 @@ export default function AdminHome({ user, onLogout, onNavigate }: AdminHomeProps
       description: 'Готовые курсы по различным направлениям',
       icon: 'GraduationCap',
       color: 'from-green-500 to-emerald-500',
-      stats: '12 программ'
+      stats: '0 программ'
     },
     {
       id: 'testing',
@@ -41,7 +41,7 @@ export default function AdminHome({ user, onLogout, onNavigate }: AdminHomeProps
       description: 'Создание и проведение тестов и экзаменов',
       icon: 'ClipboardCheck',
       color: 'from-purple-500 to-pink-500',
-      stats: '892 теста'
+      stats: '0 тестов'
     },
     {
       id: 'certificates',
@@ -49,7 +49,7 @@ export default function AdminHome({ user, onLogout, onNavigate }: AdminHomeProps
       description: 'Выдача удостоверений и сертификатов',
       icon: 'Award',
       color: 'from-yellow-500 to-orange-500',
-      stats: '456 выдано'
+      stats: '0 выдано'
     },
     {
       id: 'documents',
@@ -65,7 +65,7 @@ export default function AdminHome({ user, onLogout, onNavigate }: AdminHomeProps
       description: 'Отчёты и статистика по обучению',
       icon: 'BarChart3',
       color: 'from-indigo-500 to-purple-500',
-      stats: '15 отчётов'
+      stats: '0 отчётов'
     },
     {
       id: 'listeners',
@@ -73,7 +73,7 @@ export default function AdminHome({ user, onLogout, onNavigate }: AdminHomeProps
       description: 'Регистрация и настройка программ для слушателей',
       icon: 'Users',
       color: 'from-rose-500 to-red-500',
-      stats: '156 слушателей'
+      stats: '0 слушателей'
     }
   ];
 

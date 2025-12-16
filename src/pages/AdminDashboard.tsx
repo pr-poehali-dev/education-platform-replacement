@@ -66,10 +66,10 @@ export default function AdminDashboard({ user, onLogout, onSwitchToListener, onM
   const [protocolData, setProtocolData] = useState<any>(null);
   const [instructions, setInstructions] = useState<Instruction[]>([]);
   const [stats, setStats] = useState({
-    totalInstructions: 324,
-    activeStudents: 156,
-    completedTests: 892,
-    avgScore: 87
+    totalInstructions: 0,
+    activeStudents: 0,
+    completedTests: 0,
+    avgScore: 0
   });
 
   useEffect(() => {

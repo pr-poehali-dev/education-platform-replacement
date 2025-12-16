@@ -45,55 +45,9 @@ export default function ListenerDashboard({ listener, onLogout }: ListenerDashbo
   const [showProtocol, setShowProtocol] = useState(false);
   const [protocolData, setProtocolData] = useState<any>(null);
 
-  const assignedPrograms = [
-    {
-      id: '1',
-      title: 'Работа на высоте',
-      description: 'Комплексное обучение безопасной работе на высоте',
-      duration: '16 часов',
-      modules: 8,
-      completedModules: 5,
-      progress: 62,
-      icon: 'Mountain',
-      color: 'from-orange-500 to-red-500',
-      status: 'in-progress'
-    },
-    {
-      id: '2',
-      title: 'Электробезопасность',
-      description: 'Правила работы с электроустановками до и выше 1000В',
-      duration: '24 часа',
-      modules: 12,
-      completedModules: 0,
-      progress: 0,
-      icon: 'Zap',
-      color: 'from-yellow-500 to-orange-500',
-      status: 'not-started'
-    },
-    {
-      id: '3',
-      title: 'Пожарная безопасность',
-      description: 'ПТМ для руководителей и ответственных лиц',
-      duration: '12 часов',
-      modules: 6,
-      completedModules: 6,
-      progress: 100,
-      icon: 'Flame',
-      color: 'from-red-500 to-pink-500',
-      status: 'completed'
-    }
-  ];
+  const assignedPrograms: any[] = [];
 
-  const certificates = [
-    {
-      id: '1',
-      number: '№ 1001',
-      program: 'Пожарная безопасность',
-      issueDate: '15.10.2024',
-      validUntil: '15.10.2025',
-      score: 92
-    }
-  ];
+  const certificates: any[] = [];
 
   const sampleQuestions: TestQuestion[] = [
     {

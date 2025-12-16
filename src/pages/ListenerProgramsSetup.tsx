@@ -87,7 +87,7 @@ export default function ListenerProgramsSetup({ listenerId, onBack, onSave }: Li
     }
   ];
 
-  const [selectedPrograms, setSelectedPrograms] = useState<string[]>(['1', '2']);
+  const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
 
   const toggleProgram = (programId: string) => {
     setSelectedPrograms(prev => 

@@ -26,52 +26,7 @@ interface ListenersManagementProps {
 export default function ListenersManagement({ onBack, onConfigureListener }: ListenersManagementProps) {
   const [searchQuery, setSearchQuery] = useState('');
   
-  const listeners: Listener[] = [
-    {
-      id: '1',
-      fullName: 'Иванов Иван Иванович',
-      position: 'Электромонтер',
-      department: 'Цех №1',
-      assignedPrograms: ['Работа на высоте', 'Электробезопасность'],
-      completedPrograms: 1,
-      totalPrograms: 2,
-      progress: 50,
-      lastActivity: '2024-12-15'
-    },
-    {
-      id: '2',
-      fullName: 'Петров Петр Петрович',
-      position: 'Слесарь',
-      department: 'Цех №2',
-      assignedPrograms: ['Пожарная безопасность', 'Охрана труда'],
-      completedPrograms: 2,
-      totalPrograms: 2,
-      progress: 100,
-      lastActivity: '2024-12-14'
-    },
-    {
-      id: '3',
-      fullName: 'Сидорова Анна Сергеевна',
-      position: 'Инженер',
-      department: 'Отдел ПТО',
-      assignedPrograms: ['Работа на высоте'],
-      completedPrograms: 0,
-      totalPrograms: 1,
-      progress: 0,
-      lastActivity: '2024-12-10'
-    },
-    {
-      id: '4',
-      fullName: 'Козлов Дмитрий Александрович',
-      position: 'Мастер участка',
-      department: 'Цех №1',
-      assignedPrograms: ['Охрана труда для руководителей', 'Пожарная безопасность'],
-      completedPrograms: 1,
-      totalPrograms: 2,
-      progress: 50,
-      lastActivity: '2024-12-16'
-    }
-  ];
+  const listeners: Listener[] = [];
 
   const filteredListeners = listeners.filter(listener => 
     listener.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||

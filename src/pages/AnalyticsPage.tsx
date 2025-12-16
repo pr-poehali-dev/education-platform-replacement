@@ -31,48 +31,21 @@ export default function AnalyticsPage({ onBack }: AnalyticsPageProps) {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid md:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Прогресс обучения</CardTitle>
-              <CardDescription>Статистика по всем программам</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {[
-                { name: 'Работа на высоте', progress: 75, students: 45 },
-                { name: 'Электробезопасность', progress: 60, students: 38 },
-                { name: 'Пожарная безопасность', progress: 85, students: 62 }
-              ].map((item, idx) => (
-                <div key={idx} className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="font-medium">{item.name}</span>
-                    <span className="text-muted-foreground">{item.students} чел.</span>
-                  </div>
-                  <Progress value={item.progress} />
-                  <p className="text-xs text-muted-foreground text-right">{item.progress}% завершено</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Результаты тестирования</CardTitle>
-              <CardDescription>Средние баллы по темам</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {[
-                { name: 'Работа на высоте', score: 87 },
-                { name: 'Электробезопасность', score: 92 },
-                { name: 'Пожарная безопасность', score: 85 }
-              ].map((item, idx) => (
-                <div key={idx} className="flex justify-between items-center">
-                  <span className="text-sm font-medium">{item.name}</span>
-                  <Badge variant={item.score >= 80 ? "default" : "destructive"}>
-                    {item.score}%
-                  </Badge>
-                </div>
-              ))}
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <Card className="max-w-md w-full">
+            <CardContent className="pt-6 text-center">
+              <div className="bg-gradient-to-br from-indigo-100 to-purple-100 p-4 rounded-full w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                <Icon name="BarChart3" className="h-10 w-10 text-indigo-600" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Нет данных для отображения</h3>
+              <p className="text-muted-foreground mb-4">
+                Статистика появится после регистрации слушателей и завершения тестирований
+              </p>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                <p>• Зарегистрируйте слушателей</p>
+                <p>• Назначьте программы обучения</p>
+                <p>• Проведите тестирования</p>
+              </div>
             </CardContent>
           </Card>
         </div>

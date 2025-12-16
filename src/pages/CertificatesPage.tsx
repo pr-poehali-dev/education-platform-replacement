@@ -50,38 +50,7 @@ export default function CertificatesPage({ onBack, onNavigateToBuilder }: Certif
     validityMonths: 12
   });
 
-  const [certificates, setCertificates] = useState<Certificate[]>([
-    { 
-      id: 1, 
-      number: 1001, 
-      program: 'Работа на высоте', 
-      listenerName: 'Иванов Иван Иванович',
-      listenerPosition: 'Электромонтер',
-      issued: '15.10.2024', 
-      valid: '15.10.2025',
-      templateType: 'certificate'
-    },
-    { 
-      id: 2, 
-      number: 1002, 
-      program: 'Электробезопасность', 
-      listenerName: 'Петрова Анна Сергеевна',
-      listenerPosition: 'Инженер',
-      issued: '20.09.2024', 
-      valid: '20.09.2025',
-      templateType: 'attestation'
-    },
-    { 
-      id: 3, 
-      number: 1003, 
-      program: 'Пожарная безопасность', 
-      listenerName: 'Сидоров Петр Алексеевич',
-      listenerPosition: 'Слесарь',
-      issued: '05.11.2024', 
-      valid: '05.11.2025',
-      templateType: 'diploma'
-    }
-  ]);
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
 
   const availableTemplates: Template[] = [
     { id: '1', name: 'Сертификат работы на высоте', program: 'Работа на высоте', type: 'certificate' },
