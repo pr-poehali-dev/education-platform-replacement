@@ -11,7 +11,7 @@ interface AdminHomeProps {
     role: 'ot' | 'pb' | 'superadmin';
   };
   onLogout: () => void;
-  onNavigate: (section: 'catalog' | 'programs' | 'testing' | 'certificates' | 'documents' | 'analytics' | 'listeners' | 'admin-management') => void;
+  onNavigate: (section: 'catalog' | 'programs' | 'testing' | 'certificates' | 'documents' | 'analytics' | 'listeners' | 'admin-management' | 'video-management') => void;
 }
 
 export default function AdminHome({ user, onLogout, onNavigate }: AdminHomeProps) {
@@ -74,6 +74,14 @@ export default function AdminHome({ user, onLogout, onNavigate }: AdminHomeProps
       icon: 'Users',
       color: 'from-rose-500 to-red-500',
       stats: '0 слушателей'
+    },
+    {
+      id: 'video-management',
+      title: 'Видеоматериалы',
+      description: 'Загрузка и управление учебными видео',
+      icon: 'Video',
+      color: 'from-purple-500 to-pink-500',
+      stats: '0 видео'
     }
   ];
 

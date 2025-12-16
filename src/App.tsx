@@ -14,6 +14,7 @@ import ListenersManagement from '@/pages/ListenersManagement';
 import ListenerProgramsSetup from '@/pages/ListenerProgramsSetup';
 import AdminManagement from '@/pages/AdminManagement';
 import ModuleLearning from '@/pages/ModuleLearning';
+import VideoManagement from '@/pages/VideoManagement';
 
 type UserRole = 'admin' | 'listener' | null;
 
@@ -45,7 +46,8 @@ type CurrentView =
   | 'listeners-management'
   | 'listener-programs-setup'
   | 'admin-management'
-  | 'module-learning';
+  | 'module-learning'
+  | 'video-management';
 
 function App() {
   const [currentView, setCurrentView] = useState<CurrentView>('admin-auth');
@@ -109,9 +111,11 @@ function App() {
     setCurrentView('admin-home');
   };
 
-  const handleNavigateToSection = (section: 'catalog' | 'programs' | 'testing' | 'certificates' | 'documents' | 'analytics' | 'listeners' | 'admin-management') => {
+  const handleNavigateToSection = (section: 'catalog' | 'programs' | 'testing' | 'certificates' | 'documents' | 'analytics' | 'listeners' | 'admin-management' | 'video-management') => {
     if (section === 'listeners') {
       setCurrentView('listeners-management');
+    } else if (section === 'video-management') {
+      setCurrentView('video-management');
     } else {
       setCurrentView(section);
     }
@@ -241,6 +245,10 @@ function App() {
         }}
       />
     );
+  }
+
+  if (currentView === 'video-management' && adminUser) {
+    return <VideoManagement onBack={handleBackToAdminHome} />;
   }
 
   return <AdminAuth onLogin={handleAdminLogin} />;

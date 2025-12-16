@@ -4,6 +4,9 @@ export interface TrainingModule {
   duration: string;
   topics: string[];
   description: string;
+  videoUrl?: string;
+  videoTitle?: string;
+  videoDuration?: string;
 }
 
 export interface TrainingProgram {

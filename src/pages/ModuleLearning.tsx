@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import Icon from '@/components/ui/icon';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getProgramById, type TrainingProgram, type TrainingModule } from '@/data/trainingPrograms';
+import VideoPlayer from '@/components/VideoPlayer';
 
 interface ModuleLearningProps {
   programId: string;
@@ -22,6 +23,7 @@ interface ModuleProgress {
   topicsCompleted: number[];
   timeSpent: number;
   lastAccessed: string;
+  videoProgress?: number;
 }
 
 interface ProgramProgress {
@@ -282,40 +284,18 @@ export default function ModuleLearning({ programId, listenerId, onBack, onComple
               </CardHeader>
             </Card>
 
-            <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Icon name="Video" className="h-5 w-5 text-purple-600" />
-                  Видеоматериалы модуля
-                </CardTitle>
-                <CardDescription>
-                  Изучите видеоматериалы для лучшего понимания темы
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="aspect-video bg-slate-900 rounded-lg overflow-hidden shadow-xl relative">
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                    <Icon name="PlayCircle" className="h-16 w-16 mb-4 text-purple-400" />
-                    <p className="text-lg font-semibold mb-2">{currentModule.title}</p>
-                    <p className="text-sm text-gray-300">Учебное видео • {currentModule.duration}</p>
-                    <Button 
-                      className="mt-6 bg-purple-600 hover:bg-purple-700"
-                      size="lg"
-                    >
-                      <Icon name="Play" className="h-5 w-5 mr-2" />
-                      Начать просмотр
-                    </Button>
-                  </div>
-                </div>
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Прогресс просмотра</span>
-                    <span className="font-medium">0%</span>
-                  </div>
-                  <Progress value={0} className="h-2" />
-                </div>
-              </CardContent>
-            </Card>
+            <VideoPlayer
+              videoUrl={currentModule.videoUrl}
+              videoTitle={currentModule.title}
+              videoDuration={currentModule.duration}
+              initialProgress={currentModuleProgress.videoProgress || 0}
+              onProgressUpdate={(videoProgress) => {
+                if (!progress) return;
+                const updatedProgress = { ...progress };
+                updatedProgress.modules[currentModuleIndex].videoProgress = videoProgress;
+                saveProgress(updatedProgress);
+              }}
+            />
 
             <Card>
               <CardHeader>

@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import AssignTraining from '@/components/AssignTraining';
+import VideoUploader from '@/components/VideoUploader';
 import { trainingPrograms, type TrainingProgram } from '@/data/trainingPrograms';
 import {
   Dialog,
@@ -211,16 +212,30 @@ export default function ProgramsPage({ onBack }: ProgramsPageProps) {
                           </div>
                         </CardHeader>
                         <CardContent>
-                          <div className="space-y-2">
-                            <p className="text-sm font-medium text-muted-foreground">Темы модуля:</p>
-                            <ul className="space-y-1.5">
-                              {module.topics.map((topic, idx) => (
-                                <li key={idx} className="text-sm flex items-start gap-2">
-                                  <Icon name="Circle" className="h-2 w-2 mt-1.5 fill-current" />
-                                  <span>{topic}</span>
-                                </li>
-                              ))}
-                            </ul>
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <p className="text-sm font-medium text-muted-foreground">Темы модуля:</p>
+                              <ul className="space-y-1.5">
+                                {module.topics.map((topic, idx) => (
+                                  <li key={idx} className="text-sm flex items-start gap-2">
+                                    <Icon name="Circle" className="h-2 w-2 mt-1.5 fill-current" />
+                                    <span>{topic}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                            {module.videoUrl ? (
+                              <div className="flex items-center gap-2 p-3 bg-purple-50 rounded-lg border border-purple-200">
+                                <Icon name="Video" className="h-4 w-4 text-purple-600" />
+                                <span className="text-sm font-medium text-purple-900">Видеоматериал загружен</span>
+                                <Badge variant="secondary" className="ml-auto text-xs">{module.videoDuration}</Badge>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                                <Icon name="VideoOff" className="h-4 w-4 text-gray-400" />
+                                <span className="text-sm text-muted-foreground">Видеоматериал не загружен</span>
+                              </div>
+                            )}
                           </div>
                         </CardContent>
                       </Card>
