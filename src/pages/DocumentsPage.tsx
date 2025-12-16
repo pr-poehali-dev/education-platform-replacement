@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { jsPDF } from 'jspdf';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -205,79 +204,7 @@ export default function DocumentsPage({ onBack }: DocumentsPageProps) {
     URL.revokeObjectURL(url);
   };
 
-  const handleDownloadPDF = (doc: Document) => {
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-    const margin = 20;
-    const maxWidth = pageWidth - 2 * margin;
-    let yPosition = margin;
 
-    // Разбиваем текст на строки
-    const lines = doc.content.split('\n');
-
-    lines.forEach((line) => {
-      // Проверяем, нужно ли добавить новую страницу
-      if (yPosition > pageHeight - margin) {
-        pdf.addPage();
-        yPosition = margin;
-      }
-
-      // Определяем стиль текста
-      if (line.startsWith('# ')) {
-        pdf.setFontSize(18);
-        pdf.setFont('helvetica', 'bold');
-        const text = line.replace('# ', '');
-        const splitText = pdf.splitTextToSize(text, maxWidth);
-        pdf.text(splitText, margin, yPosition);
-        yPosition += splitText.length * 10;
-      } else if (line.startsWith('## ')) {
-        pdf.setFontSize(14);
-        pdf.setFont('helvetica', 'bold');
-        const text = line.replace('## ', '');
-        const splitText = pdf.splitTextToSize(text, maxWidth);
-        pdf.text(splitText, margin, yPosition);
-        yPosition += splitText.length * 8;
-      } else if (line.startsWith('### ')) {
-        pdf.setFontSize(12);
-        pdf.setFont('helvetica', 'bold');
-        const text = line.replace('### ', '');
-        const splitText = pdf.splitTextToSize(text, maxWidth);
-        pdf.text(splitText, margin, yPosition);
-        yPosition += splitText.length * 7;
-      } else if (line.trim() === '') {
-        yPosition += 5;
-      } else if (line.startsWith('---')) {
-        pdf.setLineWidth(0.5);
-        pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-        yPosition += 5;
-      } else if (line.startsWith('- ') || line.startsWith('* ')) {
-        pdf.setFontSize(10);
-        pdf.setFont('helvetica', 'normal');
-        const text = '• ' + line.substring(2);
-        const splitText = pdf.splitTextToSize(text, maxWidth - 10);
-        pdf.text(splitText, margin + 5, yPosition);
-        yPosition += splitText.length * 5;
-      } else if (line.match(/^\d+\./)) {
-        pdf.setFontSize(10);
-        pdf.setFont('helvetica', 'normal');
-        const splitText = pdf.splitTextToSize(line, maxWidth - 10);
-        pdf.text(splitText, margin + 5, yPosition);
-        yPosition += splitText.length * 5;
-      } else if (line.startsWith('|')) {
-        // Пропускаем таблицы для упрощения
-        yPosition += 5;
-      } else {
-        pdf.setFontSize(10);
-        pdf.setFont('helvetica', 'normal');
-        const splitText = pdf.splitTextToSize(line, maxWidth);
-        pdf.text(splitText, margin, yPosition);
-        yPosition += splitText.length * 5;
-      }
-    });
-
-    pdf.save(`${doc.title}.pdf`);
-  };
 
   const markdownToHTML = (markdown: string): string => {
     let html = markdown;
@@ -589,14 +516,7 @@ export default function DocumentsPage({ onBack }: DocumentsPageProps) {
                   <Icon name="Download" className="h-4 w-4 mr-2" />
                   Скачать DOCX
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => selectedDocument && handleDownloadPDF(selectedDocument)}
-                >
-                  <Icon name="FileText" className="h-4 w-4 mr-2" />
-                  Экспорт в PDF
-                </Button>
+
                 <Button 
                   variant="outline" 
                   className="flex-1"
