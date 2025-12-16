@@ -53,10 +53,73 @@ export default function ListenersManagement({ onBack, onConfigureListener, onGoT
     const saved = localStorage.getItem('listeners');
     return saved ? JSON.parse(saved) : [];
   });
+  const [lastBackupDate, setLastBackupDate] = useState<string | null>(() => {
+    return localStorage.getItem('lastAutoBackupDate');
+  });
+  const [autoBackupStatus, setAutoBackupStatus] = useState<string>('');
 
   useEffect(() => {
     localStorage.setItem('listeners', JSON.stringify(listeners));
   }, [listeners]);
+
+  useEffect(() => {
+    const checkAndCreateBackup = async () => {
+      const now = new Date();
+      const lastBackup = lastBackupDate ? new Date(lastBackupDate) : null;
+      
+      const shouldCreateBackup = !lastBackup || 
+        (now.getTime() - lastBackup.getTime()) > 7 * 24 * 60 * 60 * 1000;
+
+      if (shouldCreateBackup && listeners.length > 0) {
+        try {
+          const backupData = {
+            listeners: listeners,
+            version: '1.0',
+            exportDate: now.toISOString(),
+            totalListeners: listeners.length,
+            autoBackup: true
+          };
+
+          const programsData: { [key: string]: string[] } = {};
+          listeners.forEach(listener => {
+            const savedPrograms = localStorage.getItem(`listener_programs_${listener.id}`);
+            if (savedPrograms) {
+              programsData[listener.id] = JSON.parse(savedPrograms);
+            }
+          });
+          
+          const fullBackup = {
+            ...backupData,
+            programs: programsData
+          };
+
+          const backupKey = `auto_backup_${now.toISOString().split('T')[0]}`;
+          localStorage.setItem(backupKey, JSON.stringify(fullBackup));
+          localStorage.setItem('lastAutoBackupDate', now.toISOString());
+          setLastBackupDate(now.toISOString());
+          
+          const oldBackups = Object.keys(localStorage).filter(key => 
+            key.startsWith('auto_backup_') && key !== backupKey
+          );
+          oldBackups.sort().reverse();
+          oldBackups.slice(4).forEach(key => localStorage.removeItem(key));
+          
+          setAutoBackupStatus(`Создана резервная копия ${now.toLocaleDateString('ru-RU')}`);
+          setTimeout(() => setAutoBackupStatus(''), 5000);
+        } catch (error) {
+          console.error('Ошибка автоматического резервного копирования:', error);
+        }
+      }
+    };
+
+    const timer = setTimeout(checkAndCreateBackup, 2000);
+    const interval = setInterval(checkAndCreateBackup, 24 * 60 * 60 * 1000);
+
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
+  }, [listeners, lastBackupDate]);
 
   const filteredListeners = listeners.filter(listener => 
     listener.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -276,6 +339,34 @@ export default function ListenersManagement({ onBack, onConfigureListener, onGoT
     URL.revokeObjectURL(url);
   };
 
+  const downloadAutoBackup = (backupKey: string) => {
+    const backupData = localStorage.getItem(backupKey);
+    if (!backupData) return;
+
+    const blob = new Blob([backupData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const date = backupKey.replace('auto_backup_', '');
+    link.href = url;
+    link.download = `Автокопия_${date.replace(/-/g, '_')}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const getAutoBackups = () => {
+    return Object.keys(localStorage)
+      .filter(key => key.startsWith('auto_backup_'))
+      .sort()
+      .reverse()
+      .map(key => ({
+        key,
+        date: key.replace('auto_backup_', ''),
+        data: JSON.parse(localStorage.getItem(key) || '{}')
+      }));
+  };
+
   const handleBackupFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -399,6 +490,49 @@ export default function ListenersManagement({ onBack, onConfigureListener, onGoT
               </Button>
             </div>
           </div>
+
+          {autoBackupStatus && (
+            <Card className="bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+              <CardContent className="py-3">
+                <div className="flex items-center gap-3">
+                  <div className="bg-green-600 p-2 rounded-lg">
+                    <Icon name="CheckCircle" className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-green-900">{autoBackupStatus}</p>
+                    <p className="text-xs text-green-700">Данные автоматически сохранены</p>
+                  </div>
+                  <Badge variant="outline" className="bg-white text-green-700 border-green-300">
+                    Автоматически
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {lastBackupDate && (
+            <Card className="bg-blue-50 border-blue-200">
+              <CardContent className="py-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Icon name="Shield" className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm text-blue-900">
+                      Последняя автоматическая резервная копия: {new Date(lastBackupDate).toLocaleDateString('ru-RU', { 
+                        day: 'numeric', 
+                        month: 'long', 
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                  <Badge variant="outline" className="bg-white text-blue-700 border-blue-300">
+                    {listeners.length} слушателей
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="grid gap-4">
             {filteredListeners.map((listener) => (
@@ -838,6 +972,61 @@ export default function ListenersManagement({ onBack, onConfigureListener, onGoT
               </CardContent>
             </Card>
 
+            {getAutoBackups().length > 0 && (
+              <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Icon name="History" className="h-5 w-5 text-purple-600" />
+                    Автоматические резервные копии
+                  </CardTitle>
+                  <CardDescription>
+                    Система автоматически создаёт копии каждую неделю
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {getAutoBackups().map((backup) => (
+                    <div 
+                      key={backup.key}
+                      className="bg-white rounded-lg p-4 flex items-center justify-between hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="bg-purple-100 p-2 rounded-lg">
+                          <Icon name="Database" className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm text-purple-900">
+                            {new Date(backup.date).toLocaleDateString('ru-RU', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            })}
+                          </p>
+                          <p className="text-xs text-purple-700">
+                            {backup.data.totalListeners || 0} слушателей
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => downloadAutoBackup(backup.key)}
+                        variant="outline"
+                        size="sm"
+                        className="text-purple-700 border-purple-300 hover:bg-purple-50"
+                      >
+                        <Icon name="Download" className="h-4 w-4 mr-2" />
+                        Скачать
+                      </Button>
+                    </div>
+                  ))}
+                  <div className="bg-purple-100/50 rounded-lg p-3 text-xs text-purple-800">
+                    <div className="flex items-start gap-2">
+                      <Icon name="Shield" className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <p>Система хранит последние 4 автоматические копии. Старые копии удаляются автоматически.</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="bg-amber-50 border-amber-200">
               <CardContent className="pt-6">
                 <div className="flex items-start gap-3">
@@ -845,9 +1034,10 @@ export default function ListenersManagement({ onBack, onConfigureListener, onGoT
                   <div className="text-sm text-amber-900 space-y-2">
                     <p className="font-medium">Рекомендации по работе с резервными копиями:</p>
                     <ul className="space-y-1 ml-4 list-disc">
-                      <li>Создавайте резервные копии регулярно (минимум раз в неделю)</li>
+                      <li>Система автоматически создаёт копии каждую неделю</li>
+                      <li>Скачивайте важные автоматические копии на внешние носители</li>
+                      <li>Создавайте ручные копии перед важными изменениями</li>
                       <li>Храните файлы копий в надёжном месте (облако, внешний диск)</li>
-                      <li>Называйте файлы понятно с указанием даты создания</li>
                       <li>Перед восстановлением убедитесь в правильности выбранного файла</li>
                       <li>После восстановления проверьте корректность данных</li>
                     </ul>
