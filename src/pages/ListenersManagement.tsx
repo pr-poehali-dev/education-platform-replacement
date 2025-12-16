@@ -32,9 +32,11 @@ interface ListenersManagementProps {
   onBack: () => void;
   onConfigureListener: (listenerId: string) => void;
   onGoToListenerAuth: (listenerId: string) => void;
+  onDirectLogin?: (listenerId: string) => void;
+  isSuperAdmin?: boolean;
 }
 
-export default function ListenersManagement({ onBack, onConfigureListener, onGoToListenerAuth }: ListenersManagementProps) {
+export default function ListenersManagement({ onBack, onConfigureListener, onGoToListenerAuth, onDirectLogin, isSuperAdmin }: ListenersManagementProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [showRegisterDialog, setShowRegisterDialog] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
@@ -614,6 +616,16 @@ export default function ListenersManagement({ onBack, onConfigureListener, onGoT
                         <Icon name="LogIn" className="h-4 w-4 mr-2" />
                         Выход в ЛК
                       </Button>
+                      {isSuperAdmin && onDirectLogin && (
+                        <Button 
+                          variant="default"
+                          onClick={() => onDirectLogin(listener.id)}
+                          className="flex-1 min-w-[180px] bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                        >
+                          <Icon name="UserCheck" className="h-4 w-4 mr-2" />
+                          Вход в ЛК без Р
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardContent>

@@ -178,6 +178,23 @@ function App() {
     setCurrentView('listener-auth');
   };
 
+  const handleDirectListenerLogin = (listenerId: string) => {
+    const savedListeners = localStorage.getItem('listeners');
+    const listeners = savedListeners ? JSON.parse(savedListeners) : [];
+    
+    const listener = listeners.find((l: any) => l.id === listenerId);
+    if (!listener) return;
+
+    setListenerUser({ 
+      fullName: listener.fullName, 
+      position: listener.position, 
+      department: listener.department, 
+      listenerId: listener.id 
+    });
+    setUserRole('listener');
+    setCurrentView('listener-dashboard');
+  };
+
   const handleSaveListenerPrograms = () => {
     setCurrentView('listeners-management');
   };
@@ -268,6 +285,8 @@ function App() {
         onBack={handleBackToAdminHome}
         onConfigureListener={handleConfigureListener}
         onGoToListenerAuth={handleGoToListenerAuth}
+        onDirectLogin={handleDirectListenerLogin}
+        isSuperAdmin={adminUser.email === 'nshrkonstantin@gmail.com'}
       />
     );
   }
