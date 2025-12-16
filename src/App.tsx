@@ -6,6 +6,7 @@ import CatalogPage from '@/pages/CatalogPage';
 import ProgramsPage from '@/pages/ProgramsPage';
 import TestingPage from '@/pages/TestingPage';
 import CertificatesPage from '@/pages/CertificatesPage';
+import CertificateBuilder from '@/pages/CertificateBuilder';
 import AnalyticsPage from '@/pages/AnalyticsPage';
 import ListenerDashboard from '@/pages/ListenerDashboard';
 import ListenersManagement from '@/pages/ListenersManagement';
@@ -35,6 +36,7 @@ type CurrentView =
   | 'programs'
   | 'testing'
   | 'certificates'
+  | 'certificate-builder'
   | 'analytics'
   | 'listener-dashboard'
   | 'listeners-management'
@@ -153,7 +155,16 @@ function App() {
   }
 
   if (currentView === 'certificates' && adminUser) {
-    return <CertificatesPage onBack={handleBackToAdminHome} />;
+    return (
+      <CertificatesPage 
+        onBack={handleBackToAdminHome} 
+        onNavigateToBuilder={() => setCurrentView('certificate-builder')}
+      />
+    );
+  }
+
+  if (currentView === 'certificate-builder' && adminUser) {
+    return <CertificateBuilder onBack={() => setCurrentView('certificates')} />;
   }
 
   if (currentView === 'analytics' && adminUser) {

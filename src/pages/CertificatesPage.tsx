@@ -4,9 +4,10 @@ import Icon from '@/components/ui/icon';
 
 interface CertificatesPageProps {
   onBack: () => void;
+  onNavigateToBuilder: () => void;
 }
 
-export default function CertificatesPage({ onBack }: CertificatesPageProps) {
+export default function CertificatesPage({ onBack, onNavigateToBuilder }: CertificatesPageProps) {
   const certificates = [
     { id: 1, number: 1001, program: 'Работа на высоте', issued: '15.10.2024', valid: '15.10.2025' },
     { id: 2, number: 1002, program: 'Электробезопасность', issued: '20.09.2024', valid: '20.09.2025' },
@@ -17,24 +18,38 @@ export default function CertificatesPage({ onBack }: CertificatesPageProps) {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-yellow-50 to-orange-50">
       <header className="bg-white border-b shadow-sm">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={onBack}>
-              <Icon name="ArrowLeft" className="h-5 w-5" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" onClick={onBack}>
+                <Icon name="ArrowLeft" className="h-5 w-5" />
+              </Button>
+              <div className="bg-gradient-to-br from-yellow-500 to-orange-500 p-2 rounded-xl">
+                <Icon name="Award" className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+                  Сертификаты
+                </h1>
+                <p className="text-xs text-muted-foreground">Выдача удостоверений и сертификатов</p>
+              </div>
+            </div>
+            <Button 
+              onClick={onNavigateToBuilder}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            >
+              <Icon name="Palette" className="h-4 w-4 mr-2" />
+              Конструктор шаблонов
             </Button>
-            <div className="bg-gradient-to-br from-yellow-500 to-orange-500 p-2 rounded-xl">
-              <Icon name="Award" className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
-                Сертификаты
-              </h1>
-              <p className="text-xs text-muted-foreground">Выдача удостоверений и сертификатов</p>
-            </div>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold mb-2">Выданные документы</h2>
+          <p className="text-muted-foreground">История сертификатов, дипломов и удостоверений</p>
+        </div>
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {certificates.map((cert) => (
             <Card key={cert.id} className="hover:shadow-lg transition-all hover:scale-[1.02] duration-300">
