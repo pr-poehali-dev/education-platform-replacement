@@ -11,7 +11,7 @@ interface AdminHomeProps {
     role: 'ot' | 'pb' | 'superadmin';
   };
   onLogout: () => void;
-  onNavigate: (section: 'catalog' | 'programs' | 'testing' | 'certificates' | 'analytics' | 'listeners' | 'admin-management') => void;
+  onNavigate: (section: 'catalog' | 'programs' | 'testing' | 'certificates' | 'documents' | 'analytics' | 'listeners' | 'admin-management') => void;
 }
 
 export default function AdminHome({ user, onLogout, onNavigate }: AdminHomeProps) {
@@ -50,6 +50,14 @@ export default function AdminHome({ user, onLogout, onNavigate }: AdminHomeProps
       icon: 'Award',
       color: 'from-yellow-500 to-orange-500',
       stats: '456 выдано'
+    },
+    {
+      id: 'documents',
+      title: 'Документы',
+      description: 'Создание инструкций и программ с помощью ИИ',
+      icon: 'FileText',
+      color: 'from-purple-500 to-pink-500',
+      stats: 'ИИ-генератор'
     },
     {
       id: 'analytics',

@@ -1,0 +1,456 @@
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import Icon from '@/components/ui/icon';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+interface DocumentsPageProps {
+  onBack: () => void;
+}
+
+interface Document {
+  id: number;
+  title: string;
+  type: 'program' | 'iot' | 'di' | 'profession' | 'tool' | 'electro';
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  category: string;
+}
+
+const documentTypes = [
+  { value: 'program', label: 'Программа обучения', icon: 'GraduationCap', color: 'from-blue-500 to-cyan-500' },
+  { value: 'iot', label: 'Инструкция по охране труда (ИОТ)', icon: 'FileText', color: 'from-green-500 to-emerald-500' },
+  { value: 'di', label: 'Должностная инструкция (ДИ)', icon: 'Briefcase', color: 'from-purple-500 to-pink-500' },
+  { value: 'profession', label: 'Инструкция по профессии', icon: 'UserCog', color: 'from-orange-500 to-red-500' },
+  { value: 'tool', label: 'Инструкция по работе с инструментом', icon: 'Wrench', color: 'from-yellow-500 to-orange-500' },
+  { value: 'electro', label: 'Инструкция по электроинструменту', icon: 'Zap', color: 'from-indigo-500 to-purple-500' }
+];
+
+export default function DocumentsPage({ onBack }: DocumentsPageProps) {
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  
+  const [newDocument, setNewDocument] = useState({
+    type: '',
+    title: '',
+    category: '',
+    prompt: ''
+  });
+
+  const [documents, setDocuments] = useState<Document[]>([
+    {
+      id: 1,
+      title: 'Программа обучения по охране труда для электромонтеров',
+      type: 'program',
+      content: 'Содержимое программы обучения...',
+      createdAt: '10.12.2024',
+      updatedAt: '10.12.2024',
+      category: 'Электробезопасность'
+    },
+    {
+      id: 2,
+      title: 'ИОТ при работе на высоте',
+      type: 'iot',
+      content: 'Содержимое инструкции...',
+      createdAt: '08.12.2024',
+      updatedAt: '09.12.2024',
+      category: 'Работа на высоте'
+    },
+    {
+      id: 3,
+      title: 'Должностная инструкция инженера по охране труда',
+      type: 'di',
+      content: 'Содержимое должностной инструкции...',
+      createdAt: '05.12.2024',
+      updatedAt: '05.12.2024',
+      category: 'Администрация'
+    }
+  ]);
+
+  const getDocumentTypeInfo = (type: string) => {
+    return documentTypes.find(t => t.value === type) || documentTypes[0];
+  };
+
+  const handleGenerateDocument = async () => {
+    if (!newDocument.type || !newDocument.title || !newDocument.prompt) {
+      return;
+    }
+
+    setIsGenerating(true);
+
+    // Симуляция генерации через ИИ
+    setTimeout(() => {
+      const generatedContent = `# ${newDocument.title}
+
+## 1. Общие положения
+1.1. Настоящая инструкция разработана в соответствии с требованиями законодательства РФ.
+1.2. Инструкция определяет порядок выполнения работ и меры безопасности.
+
+## 2. Требования безопасности перед началом работы
+2.1. Проверить исправность оборудования и инструментов.
+2.2. Надеть необходимые средства индивидуальной защиты.
+2.3. Осмотреть рабочее место на предмет опасных факторов.
+
+## 3. Требования безопасности во время работы
+3.1. Соблюдать технологическую последовательность операций.
+3.2. Использовать инструмент строго по назначению.
+3.3. Не допускать посторонних лиц на рабочее место.
+
+## 4. Требования безопасности в аварийных ситуациях
+4.1. При возникновении аварийной ситуации прекратить работу.
+4.2. Сообщить непосредственному руководителю.
+4.3. Принять меры по ликвидации последствий.
+
+## 5. Требования безопасности по окончании работы
+5.1. Привести в порядок рабочее место.
+5.2. Убрать инструмент и оборудование в отведенные места.
+5.3. Сообщить руководителю о всех недостатках.
+
+---
+*Документ создан с помощью ИИ-ассистента ГорТех Аттестация*
+*Дата создания: ${new Date().toLocaleDateString('ru-RU')}*`;
+
+      const document: Document = {
+        id: documents.length + 1,
+        title: newDocument.title,
+        type: newDocument.type as any,
+        content: generatedContent,
+        createdAt: new Date().toLocaleDateString('ru-RU'),
+        updatedAt: new Date().toLocaleDateString('ru-RU'),
+        category: newDocument.category
+      };
+
+      setDocuments([document, ...documents]);
+      setIsGenerating(false);
+      setShowCreateDialog(false);
+      setNewDocument({
+        type: '',
+        title: '',
+        category: '',
+        prompt: ''
+      });
+    }, 3000);
+  };
+
+  const handleViewDocument = (doc: Document) => {
+    setSelectedDocument(doc);
+    setShowPreviewDialog(true);
+  };
+
+  const handleEditDocument = (doc: Document) => {
+    setSelectedDocument(doc);
+    setShowPreviewDialog(true);
+  };
+
+  const handleSaveDocument = (updatedContent: string) => {
+    if (!selectedDocument) return;
+
+    const updatedDocuments = documents.map(doc =>
+      doc.id === selectedDocument.id
+        ? { ...doc, content: updatedContent, updatedAt: new Date().toLocaleDateString('ru-RU') }
+        : doc
+    );
+
+    setDocuments(updatedDocuments);
+    setSelectedDocument({ ...selectedDocument, content: updatedContent });
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-pink-50">
+      <header className="bg-white border-b shadow-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="icon" onClick={onBack}>
+                <Icon name="ArrowLeft" className="h-5 w-5" />
+              </Button>
+              <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-2 rounded-xl">
+                <Icon name="FileText" className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  Документы
+                </h1>
+                <p className="text-xs text-muted-foreground">Создание инструкций и программ с помощью ИИ</p>
+              </div>
+            </div>
+            <Button 
+              onClick={() => setShowCreateDialog(true)}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            >
+              <Icon name="Sparkles" className="h-4 w-4 mr-2" />
+              Создать документ с ИИ
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-2">Типы документов</h2>
+          <p className="text-muted-foreground mb-6">Выберите тип документа для создания</p>
+          
+          <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {documentTypes.map((type) => (
+              <button
+                key={type.value}
+                onClick={() => {
+                  setNewDocument({ ...newDocument, type: type.value });
+                  setShowCreateDialog(true);
+                }}
+                className="group"
+              >
+                <Card className="hover:shadow-lg transition-all hover:scale-105 duration-300 cursor-pointer">
+                  <CardContent className="p-4 text-center">
+                    <div className={`bg-gradient-to-br ${type.color} p-3 rounded-xl inline-flex mb-2 transform group-hover:rotate-6 transition-transform`}>
+                      <Icon name={type.icon} className="h-6 w-6 text-white" />
+                    </div>
+                    <p className="text-xs font-medium">{type.label}</p>
+                  </CardContent>
+                </Card>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold mb-2">Созданные документы</h2>
+          <p className="text-muted-foreground">История созданных инструкций и программ</p>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {documents.map((doc) => {
+            const typeInfo = getDocumentTypeInfo(doc.type);
+            return (
+              <Card key={doc.id} className="hover:shadow-lg transition-all hover:scale-[1.02] duration-300">
+                <CardHeader>
+                  <div className="flex items-start gap-3">
+                    <div className={`bg-gradient-to-br ${typeInfo.color} p-2 rounded-lg flex-shrink-0`}>
+                      <Icon name={typeInfo.icon} className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-base line-clamp-2">{doc.title}</CardTitle>
+                      <CardDescription className="mt-1">
+                        <Badge variant="outline" className="text-xs">{doc.category}</Badge>
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Создан</span>
+                      <span>{doc.createdAt}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Обновлен</span>
+                      <span>{doc.updatedAt}</span>
+                    </div>
+                    <div className="flex gap-2 mt-3">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleViewDocument(doc)}
+                      >
+                        <Icon name="Eye" className="h-4 w-4 mr-1" />
+                        Просмотр
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => handleEditDocument(doc)}
+                      >
+                        <Icon name="Edit" className="h-4 w-4 mr-1" />
+                        Редактировать
+                      </Button>
+                    </div>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Icon name="Download" className="h-4 w-4 mr-2" />
+                      Скачать DOCX
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </main>
+
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Icon name="Sparkles" className="h-5 w-5 text-purple-600" />
+              Создать документ с помощью ИИ
+            </DialogTitle>
+            <DialogDescription>
+              Заполните параметры, и ИИ-ассистент создаст профессиональный документ
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-6 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="type">Тип документа</Label>
+              <Select 
+                value={newDocument.type} 
+                onValueChange={(value) => setNewDocument({ ...newDocument, type: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Выберите тип документа" />
+                </SelectTrigger>
+                <SelectContent>
+                  {documentTypes.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      <div className="flex items-center gap-2">
+                        <Icon name={type.icon} className="h-4 w-4" />
+                        {type.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="title">Название документа</Label>
+              <Input
+                id="title"
+                placeholder="Например: Инструкция по работе с болгаркой"
+                value={newDocument.title}
+                onChange={(e) => setNewDocument({ ...newDocument, title: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="category">Категория / Направление</Label>
+              <Input
+                id="category"
+                placeholder="Например: Электробезопасность, Работа на высоте"
+                value={newDocument.category}
+                onChange={(e) => setNewDocument({ ...newDocument, category: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="prompt">Опишите требования к документу</Label>
+              <Textarea
+                id="prompt"
+                placeholder="Опишите специфику работы, особые требования, нормативные документы, которые нужно учесть..."
+                value={newDocument.prompt}
+                onChange={(e) => setNewDocument({ ...newDocument, prompt: e.target.value })}
+                rows={6}
+                className="resize-none"
+              />
+              <p className="text-xs text-muted-foreground">
+                💡 Чем подробнее описание, тем точнее будет документ
+              </p>
+            </div>
+
+            <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <Icon name="Info" className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium text-purple-900 mb-1">Как работает ИИ-генерация</p>
+                    <ul className="text-purple-700 space-y-1 list-disc list-inside">
+                      <li>Анализирует ваши требования и тип документа</li>
+                      <li>Создает структурированный документ по ГОСТ</li>
+                      <li>Учитывает нормы охраны труда и законодательство РФ</li>
+                      <li>Вы можете отредактировать результат после создания</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowCreateDialog(false)}
+              disabled={isGenerating}
+            >
+              Отмена
+            </Button>
+            <Button 
+              onClick={handleGenerateDocument}
+              disabled={!newDocument.type || !newDocument.title || !newDocument.prompt || isGenerating}
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            >
+              {isGenerating ? (
+                <>
+                  <Icon name="Loader2" className="h-4 w-4 mr-2 animate-spin" />
+                  Создание документа...
+                </>
+              ) : (
+                <>
+                  <Icon name="Sparkles" className="h-4 w-4 mr-2" />
+                  Создать документ
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
+        <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{selectedDocument?.title}</DialogTitle>
+            <DialogDescription>
+              {selectedDocument && getDocumentTypeInfo(selectedDocument.type).label} • {selectedDocument?.category}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedDocument && (
+            <div className="flex-1 overflow-y-auto">
+              <Textarea
+                value={selectedDocument.content}
+                onChange={(e) => handleSaveDocument(e.target.value)}
+                className="min-h-[500px] font-mono text-sm"
+              />
+              
+              <div className="flex gap-2 mt-4">
+                <Button variant="outline" className="flex-1">
+                  <Icon name="Download" className="h-4 w-4 mr-2" />
+                  Скачать DOCX
+                </Button>
+                <Button variant="outline" className="flex-1">
+                  <Icon name="FileText" className="h-4 w-4 mr-2" />
+                  Экспорт в PDF
+                </Button>
+                <Button variant="outline" className="flex-1">
+                  <Icon name="Printer" className="h-4 w-4 mr-2" />
+                  Печать
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

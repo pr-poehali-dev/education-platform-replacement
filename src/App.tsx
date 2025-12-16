@@ -7,6 +7,7 @@ import ProgramsPage from '@/pages/ProgramsPage';
 import TestingPage from '@/pages/TestingPage';
 import CertificatesPage from '@/pages/CertificatesPage';
 import CertificateBuilder from '@/pages/CertificateBuilder';
+import DocumentsPage from '@/pages/DocumentsPage';
 import AnalyticsPage from '@/pages/AnalyticsPage';
 import ListenerDashboard from '@/pages/ListenerDashboard';
 import ListenersManagement from '@/pages/ListenersManagement';
@@ -37,6 +38,7 @@ type CurrentView =
   | 'testing'
   | 'certificates'
   | 'certificate-builder'
+  | 'documents'
   | 'analytics'
   | 'listener-dashboard'
   | 'listeners-management'
@@ -96,7 +98,7 @@ function App() {
     setCurrentView('admin-home');
   };
 
-  const handleNavigateToSection = (section: 'catalog' | 'programs' | 'testing' | 'certificates' | 'analytics' | 'listeners' | 'admin-management') => {
+  const handleNavigateToSection = (section: 'catalog' | 'programs' | 'testing' | 'certificates' | 'documents' | 'analytics' | 'listeners' | 'admin-management') => {
     if (section === 'listeners') {
       setCurrentView('listeners-management');
     } else {
@@ -165,6 +167,10 @@ function App() {
 
   if (currentView === 'certificate-builder' && adminUser) {
     return <CertificateBuilder onBack={() => setCurrentView('certificates')} />;
+  }
+
+  if (currentView === 'documents' && adminUser) {
+    return <DocumentsPage onBack={handleBackToAdminHome} />;
   }
 
   if (currentView === 'analytics' && adminUser) {
