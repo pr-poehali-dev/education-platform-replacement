@@ -167,7 +167,7 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
               </div>
               <div>
                 <h1 className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                  ГорТех Аттестация
+                  АО "ГРК "Западная""
                 </h1>
                 <p className="text-xs text-muted-foreground">Личный кабинет слушателя</p>
               </div>
@@ -217,7 +217,7 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
               <div className="grid md:grid-cols-2 gap-4 pt-4 border-t border-green-200">
                 <div>
                   <p className="text-xs text-green-700 mb-1">Предприятие</p>
-                  <p className="font-semibold text-green-900">ГорТех Аттестация</p>
+                  <p className="font-semibold text-green-900">АО "ГРК "Западная""</p>
                 </div>
                 <div>
                   <p className="text-xs text-green-700 mb-1">ФИО</p>

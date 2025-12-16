@@ -166,7 +166,7 @@ export default function AdminHome({ user, onLogout, onNavigate }: AdminHomeProps
               </div>
               <div>
                 <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  ГорТех Аттестация
+                  АО "ГРК "Западная""
                 </h1>
                 <p className="text-xs text-muted-foreground">
                   {isSuperAdmin ? 'Главная панель управления' : `Панель администратора — ${departmentName}`}

@@ -42,7 +42,7 @@ export default function ListenerAuth({ onLogin, listenerId }: ListenerAuthProps)
               <Icon name="GraduationCap" className="h-16 w-16 text-white animate-pulse" />
             </div>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-4">ГорТех Аттестация</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">АО "ГРК "Западная""</h2>
           <div className="flex items-center justify-center gap-2">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
             <div className="w-2 h-2 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -82,7 +82,7 @@ export default function ListenerAuth({ onLogin, listenerId }: ListenerAuthProps)
             </div>
           </div>
           <h1 className="text-4xl font-bold text-white mt-6 text-center drop-shadow-lg">
-            ГорТех Аттестация
+            АО "ГРК "Западная""
           </h1>
           <p className="text-green-200 text-center mt-2 font-medium">
             Охрана труда и пожарная безопасность
