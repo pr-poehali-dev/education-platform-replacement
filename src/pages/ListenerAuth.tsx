@@ -23,77 +23,124 @@ export default function ListenerAuth({ onLogin, listenerId }: ListenerAuthProps)
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-green-800 to-teal-900" />
+      
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl animate-blob" />
+        <div className="absolute top-40 right-10 w-72 h-72 bg-emerald-400 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000" />
+        <div className="absolute bottom-20 left-1/3 w-72 h-72 bg-teal-400 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000" />
+      </div>
+
+      <div className="absolute inset-0">
+        <div className="absolute top-10 left-1/4 text-white/5 text-6xl font-bold">LEARN</div>
+        <div className="absolute top-32 right-1/4 text-white/5 text-6xl font-bold">GROW</div>
+        <div className="absolute bottom-32 left-1/3 text-white/5 text-6xl font-bold">SAFE</div>
+        <Icon name="GraduationCap" className="absolute top-1/4 right-20 h-32 w-32 text-white/5" />
+        <Icon name="BookOpen" className="absolute bottom-1/4 left-20 h-32 w-32 text-white/5" />
+        <Icon name="Award" className="absolute top-1/2 right-1/4 h-24 w-24 text-white/5" />
+      </div>
+
+      <div className="relative w-full max-w-md z-10">
         <div className="flex flex-col items-center mb-8">
-          <div className="bg-gradient-to-br from-green-600 to-emerald-600 p-4 rounded-2xl mb-4">
-            <Icon name="GraduationCap" className="h-12 w-12 text-white" />
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 rounded-2xl blur-xl opacity-75 animate-pulse" />
+            <div className="relative bg-gradient-to-br from-green-500 via-emerald-500 to-teal-600 p-5 rounded-2xl shadow-2xl">
+              <Icon name="GraduationCap" className="h-14 w-14 text-white drop-shadow-lg" />
+            </div>
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold text-white mt-6 text-center drop-shadow-lg">
             Обучающий портал
           </h1>
-          <p className="text-muted-foreground text-center mt-2">
-            Вход для слушателей
+          <p className="text-green-200 text-center mt-2 font-medium">
+            Охрана труда и пожарная безопасность
           </p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Вход в личный кабинет</CardTitle>
-            <CardDescription>
+        <Card className="backdrop-blur-lg bg-white/95 shadow-2xl border-white/20">
+          <CardHeader className="space-y-1 pb-6">
+            <CardTitle className="text-2xl text-center bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+              Вход для слушателя
+            </CardTitle>
+            <CardDescription className="text-center">
               {listenerId 
-                ? 'Заполните данные для доступа к назначенным программам обучения' 
-                : 'Заполните данные для входа. Если вы уже проходили обучение, мы восстановим ваш прогресс'}
+                ? 'Заполните данные для доступа к назначенным программам' 
+                : 'Введите данные для входа в обучающую систему'}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="fullname">ФИО</Label>
-                <Input
-                  id="fullname"
-                  placeholder="Иванов Иван Иванович"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                />
+                <Label htmlFor="fullname" className="text-slate-700 font-medium">
+                  ФИО полностью
+                </Label>
+                <div className="relative">
+                  <Icon name="User" className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                  <Input
+                    id="fullname"
+                    placeholder="Иванов Иван Иванович"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="pl-10 h-11 border-slate-300 focus:border-green-500"
+                    required
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="position">Должность или профессия</Label>
-                <Input
-                  id="position"
-                  placeholder="Электромонтер"
-                  value={position}
-                  onChange={(e) => setPosition(e.target.value)}
-                  required
-                />
+                <Label htmlFor="position" className="text-slate-700 font-medium">
+                  Должность или профессия
+                </Label>
+                <div className="relative">
+                  <Icon name="Briefcase" className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                  <Input
+                    id="position"
+                    placeholder="Электромонтер, Слесарь, Инженер..."
+                    value={position}
+                    onChange={(e) => setPosition(e.target.value)}
+                    className="pl-10 h-11 border-slate-300 focus:border-green-500"
+                    required
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="department">Подразделение</Label>
-                <Input
-                  id="department"
-                  placeholder="Цех №1"
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                  required
-                />
+                <Label htmlFor="department" className="text-slate-700 font-medium">
+                  Подразделение
+                </Label>
+                <div className="relative">
+                  <Icon name="Building" className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                  <Input
+                    id="department"
+                    placeholder="Цех №1, Отдел ПТО, Участок..."
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    className="pl-10 h-11 border-slate-300 focus:border-green-500"
+                    required
+                  />
+                </div>
               </div>
 
-              <Button type="submit" className="w-full bg-gradient-to-r from-green-600 to-emerald-600">
-                <Icon name="LogIn" className="h-4 w-4 mr-2" />
+              <Button 
+                type="submit" 
+                className="w-full h-12 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/30 text-base font-medium mt-6"
+              >
+                <Icon name="LogIn" className="h-5 w-5 mr-2" />
                 Войти в личный кабинет
               </Button>
             </form>
 
             {listenerId && (
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-start gap-2">
-                  <Icon name="Info" className="h-5 w-5 text-blue-600 mt-0.5" />
-                  <div className="text-sm text-blue-900">
-                    <p className="font-medium">Персональная ссылка</p>
-                    <p className="text-blue-700 mt-1">Для вас подготовлены специальные программы обучения</p>
+              <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200">
+                <div className="flex items-start gap-3">
+                  <div className="bg-blue-500 p-2 rounded-lg flex-shrink-0">
+                    <Icon name="Sparkles" className="h-5 w-5 text-white" />
+                  </div>
+                  <div className="text-sm">
+                    <p className="font-semibold text-blue-900 mb-1">Персональное приглашение</p>
+                    <p className="text-blue-700">
+                      Для вас подготовлена индивидуальная программа обучения по охране труда и пожарной безопасности
+                    </p>
                   </div>
                 </div>
               </div>
@@ -101,9 +148,26 @@ export default function ListenerAuth({ onLogin, listenerId }: ListenerAuthProps)
           </CardContent>
         </Card>
 
-        <div className="mt-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            Возникли проблемы? Обратитесь к администратору
+        <div className="mt-6 backdrop-blur-sm bg-white/10 rounded-xl p-4 border border-white/20">
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <Icon name="BookOpen" className="h-6 w-6 text-green-300 mx-auto mb-2" />
+              <p className="text-xs text-green-200 font-medium">Обучение</p>
+            </div>
+            <div>
+              <Icon name="ClipboardCheck" className="h-6 w-6 text-green-300 mx-auto mb-2" />
+              <p className="text-xs text-green-200 font-medium">Тестирование</p>
+            </div>
+            <div>
+              <Icon name="Award" className="h-6 w-6 text-green-300 mx-auto mb-2" />
+              <p className="text-xs text-green-200 font-medium">Сертификат</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 text-center">
+          <p className="text-sm text-green-200">
+            Возникли вопросы? <button className="text-white font-medium underline hover:text-green-300 transition-colors">Обратитесь к администратору</button>
           </p>
         </div>
       </div>
