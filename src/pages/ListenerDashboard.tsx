@@ -324,7 +324,7 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
                     <div className="space-y-4">
                       <div>
                         <Label className="text-muted-foreground">Предприятие</Label>
-                        <p className="text-lg font-medium">ГорТех Аттестация</p>
+                        <p className="text-lg font-medium">АО "ГРК "Западная""</p>
                       </div>
                       <div>
                         <Label className="text-muted-foreground">ФИО полностью</Label>
