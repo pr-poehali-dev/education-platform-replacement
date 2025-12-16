@@ -36,9 +36,10 @@ interface ListenerDashboardProps {
   };
   onLogout: () => void;
   onStartLearning?: (programId: string) => void;
+  onNavigateToVideos?: () => void;
 }
 
-export default function ListenerDashboard({ listener, onLogout, onStartLearning }: ListenerDashboardProps) {
+export default function ListenerDashboard({ listener, onLogout, onStartLearning, onNavigateToVideos }: ListenerDashboardProps) {
   const [activeTab, setActiveTab] = useState('my-page');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [testMode, setTestMode] = useState<'practice' | 'exam' | null>(null);
@@ -236,7 +237,7 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning 
         </Card>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-white grid grid-cols-4 w-full">
+          <TabsList className="bg-white grid grid-cols-5 w-full">
             <TabsTrigger value="my-page">
               <Icon name="Home" className="h-4 w-4 mr-2" />
               Моя страница
@@ -244,6 +245,10 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning 
             <TabsTrigger value="programs">
               <Icon name="BookOpen" className="h-4 w-4 mr-2" />
               Блок обучения
+            </TabsTrigger>
+            <TabsTrigger value="videos">
+              <Icon name="Video" className="h-4 w-4 mr-2" />
+              Видеобиблиотека
             </TabsTrigger>
             <TabsTrigger value="testing">
               <Icon name="ClipboardCheck" className="h-4 w-4 mr-2" />
@@ -501,6 +506,79 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning 
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="videos">
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold">Видеобиблиотека</h2>
+                <p className="text-muted-foreground">Учебные видеоматериалы и плейлисты</p>
+              </div>
+
+              <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 hover:shadow-xl transition-all cursor-pointer" onClick={onNavigateToVideos}>
+                <CardContent className="pt-6">
+                  <div className="text-center space-y-4">
+                    <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-6 rounded-full w-20 h-20 mx-auto flex items-center justify-center">
+                      <Icon name="PlayCircle" className="h-10 w-10 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold mb-2">Открыть видеобиблиотеку</h3>
+                      <p className="text-muted-foreground">
+                        Плейлисты и рекомендации учебных видеоматериалов
+                      </p>
+                    </div>
+                    <Button size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
+                      <Icon name="Video" className="h-5 w-5 mr-2" />
+                      Перейти к видео
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <div className="grid md:grid-cols-3 gap-6">
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center gap-3">
+                      <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-3 rounded-xl">
+                        <Icon name="PlayCircle" className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <CardDescription>Доступно видео</CardDescription>
+                        <CardTitle className="text-3xl">25+</CardTitle>
+                      </div>
+                    </div>
+                  </CardHeader>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center gap-3">
+                      <div className="bg-gradient-to-br from-blue-500 to-indigo-500 p-3 rounded-xl">
+                        <Icon name="List" className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <CardDescription>Плейлистов</CardDescription>
+                        <CardTitle className="text-3xl">5</CardTitle>
+                      </div>
+                    </div>
+                  </CardHeader>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center gap-3">
+                      <div className="bg-gradient-to-br from-yellow-500 to-orange-500 p-3 rounded-xl">
+                        <Icon name="Star" className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <CardDescription>Рекомендуем</CardDescription>
+                        <CardTitle className="text-3xl">3</CardTitle>
+                      </div>
+                    </div>
+                  </CardHeader>
+                </Card>
               </div>
             </div>
           </TabsContent>

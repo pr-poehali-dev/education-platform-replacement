@@ -15,6 +15,8 @@ import ListenerProgramsSetup from '@/pages/ListenerProgramsSetup';
 import AdminManagement from '@/pages/AdminManagement';
 import ModuleLearning from '@/pages/ModuleLearning';
 import VideoManagement from '@/pages/VideoManagement';
+import VideoLibrary from '@/pages/VideoLibrary';
+import VideoPlayerPage from '@/pages/VideoPlayer';
 
 type UserRole = 'admin' | 'listener' | null;
 
@@ -47,7 +49,9 @@ type CurrentView =
   | 'listener-programs-setup'
   | 'admin-management'
   | 'module-learning'
-  | 'video-management';
+  | 'video-management'
+  | 'video-library'
+  | 'video-player';
 
 function App() {
   const [currentView, setCurrentView] = useState<CurrentView>('admin-auth');
@@ -56,6 +60,7 @@ function App() {
   const [adminUser, setAdminUser] = useState<AdminUser | null>(null);
   const [listenerUser, setListenerUser] = useState<ListenerUser | null>(null);
   const [selectedListenerId, setSelectedListenerId] = useState<string | null>(null);
+  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
 
   useEffect(() => {
     // Проверяем URL параметры
@@ -210,6 +215,7 @@ function App() {
           setSelectedProgramId(programId);
           setCurrentView('module-learning');
         }}
+        onNavigateToVideos={() => setCurrentView('video-library')}
       />
     );
   }
@@ -249,6 +255,30 @@ function App() {
 
   if (currentView === 'video-management' && adminUser) {
     return <VideoManagement onBack={handleBackToAdminHome} />;
+  }
+
+  if (currentView === 'video-library') {
+    return (
+      <VideoLibrary
+        onBack={() => setCurrentView(userRole === 'admin' ? 'admin-home' : 'listener-dashboard')}
+        onPlayVideo={(videoId) => {
+          setSelectedVideoId(videoId);
+          setCurrentView('video-player');
+        }}
+      />
+    );
+  }
+
+  if (currentView === 'video-player' && selectedVideoId) {
+    return (
+      <VideoPlayerPage
+        videoId={selectedVideoId}
+        onBack={() => setCurrentView('video-library')}
+        onPlayVideo={(videoId) => {
+          setSelectedVideoId(videoId);
+        }}
+      />
+    );
   }
 
   return <AdminAuth onLogin={handleAdminLogin} />;
