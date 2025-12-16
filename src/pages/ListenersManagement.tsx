@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,7 +47,14 @@ export default function ListenersManagement({ onBack, onConfigureListener, onGoT
     position: '',
     department: ''
   });
-  const [listeners, setListeners] = useState<Listener[]>([]);
+  const [listeners, setListeners] = useState<Listener[]>(() => {
+    const saved = localStorage.getItem('listeners');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('listeners', JSON.stringify(listeners));
+  }, [listeners]);
 
   const filteredListeners = listeners.filter(listener => 
     listener.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||

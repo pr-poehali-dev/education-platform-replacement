@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -23,12 +23,18 @@ interface ListenerProgramsSetupProps {
 }
 
 export default function ListenerProgramsSetup({ listenerId, onBack, onSave }: ListenerProgramsSetupProps) {
-  const listener = {
-    fullName: 'Иванов Иван Иванович',
-    position: 'Электромонтер',
-    department: 'Цех №1',
-    email: 'ivanov@example.com'
-  };
+  const [listener, setListener] = useState<any>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('listeners');
+    if (saved) {
+      const listeners = JSON.parse(saved);
+      const foundListener = listeners.find((l: any) => l.id === listenerId);
+      if (foundListener) {
+        setListener(foundListener);
+      }
+    }
+  }, [listenerId]);
 
   const allPrograms: Program[] = [
     {
@@ -87,7 +93,14 @@ export default function ListenerProgramsSetup({ listenerId, onBack, onSave }: Li
     }
   ];
 
-  const [selectedPrograms, setSelectedPrograms] = useState<string[]>([]);
+  const [selectedPrograms, setSelectedPrograms] = useState<string[]>(() => {
+    const saved = localStorage.getItem(`listener_programs_${listenerId}`);
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem(`listener_programs_${listenerId}`, JSON.stringify(selectedPrograms));
+  }, [selectedPrograms, listenerId]);
 
   const toggleProgram = (programId: string) => {
     setSelectedPrograms(prev => 
@@ -98,6 +111,23 @@ export default function ListenerProgramsSetup({ listenerId, onBack, onSave }: Li
   };
 
   const handleSave = () => {
+    const saved = localStorage.getItem('listeners');
+    if (saved) {
+      const listeners = JSON.parse(saved);
+      const updatedListeners = listeners.map((l: any) => 
+        l.id === listenerId 
+          ? { 
+              ...l, 
+              assignedPrograms: selectedPrograms.map(id => 
+                allPrograms.find(p => p.id === id)?.title || ''
+              ),
+              totalPrograms: selectedPrograms.length,
+              lastActivity: new Date().toISOString()
+            }
+          : l
+      );
+      localStorage.setItem('listeners', JSON.stringify(updatedListeners));
+    }
     onSave();
   };
 
@@ -123,6 +153,21 @@ export default function ListenerProgramsSetup({ listenerId, onBack, onSave }: Li
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {!listener ? (
+          <div className="flex items-center justify-center min-h-[60vh]">
+            <Card className="max-w-md w-full">
+              <CardContent className="pt-6 text-center">
+                <Icon name="AlertCircle" className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-semibold mb-2">Слушатель не найден</h3>
+                <p className="text-muted-foreground mb-4">Не удалось найти информацию о слушателе</p>
+                <Button onClick={onBack}>
+                  <Icon name="ArrowLeft" className="h-4 w-4 mr-2" />
+                  Вернуться назад
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
         <div className="grid lg:grid-cols-3 gap-6 mb-8">
           <div className="lg:col-span-1">
             <Card className="sticky top-24">
@@ -136,7 +181,7 @@ export default function ListenerProgramsSetup({ listenerId, onBack, onSave }: Li
                 <div className="flex items-center gap-3">
                   <Avatar className="h-16 w-16">
                     <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white text-lg">
-                      {listener.fullName.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                      {listener.fullName.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
@@ -149,10 +194,6 @@ export default function ListenerProgramsSetup({ listenerId, onBack, onSave }: Li
                   <div className="flex items-center gap-2">
                     <Icon name="Building" className="h-4 w-4 text-muted-foreground" />
                     <span>{listener.department}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Icon name="Mail" className="h-4 w-4 text-muted-foreground" />
-                    <span>{listener.email}</span>
                   </div>
                 </div>
 
@@ -255,21 +296,7 @@ export default function ListenerProgramsSetup({ listenerId, onBack, onSave }: Li
             </div>
           </div>
         </div>
-
-        <Card className="bg-green-50 border-green-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Icon name="Lightbulb" className="h-5 w-5 text-green-600" />
-              Рекомендации по назначению программ
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-green-900 space-y-2">
-            <p>• Учитывайте должность и обязанности слушателя при выборе программ</p>
-            <p>• Для работников опасных профессий обязательны программы по соответствующим темам</p>
-            <p>• Рекомендуется назначать не более 3-4 программ одновременно</p>
-            <p>• После сохранения слушатель получит доступ к программам в своём личном кабинете</p>
-          </CardContent>
-        </Card>
+        )}
       </main>
     </div>
   );
