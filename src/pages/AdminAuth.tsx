@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import Icon from '@/components/ui/icon';
 
 interface AdminAuthProps {
@@ -17,6 +18,33 @@ export default function AdminAuth({ onLogin }: AdminAuthProps) {
   const [regPassword, setRegPassword] = useState('');
   const [regName, setRegName] = useState('');
   const [regRole, setRegRole] = useState<'ot' | 'pb'>('ot');
+  const [isLoading, setIsLoading] = useState(true);
+  const [showContent, setShowContent] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      setTimeout(() => setShowContent(true), 100);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const getPasswordStrength = (password: string) => {
+    if (!password) return { strength: 0, label: '', color: '' };
+    
+    let strength = 0;
+    if (password.length >= 8) strength += 25;
+    if (password.length >= 12) strength += 15;
+    if (/[a-z]/.test(password)) strength += 20;
+    if (/[A-Z]/.test(password)) strength += 20;
+    if (/[0-9]/.test(password)) strength += 20;
+    
+    if (strength <= 40) return { strength, label: 'Слабый', color: 'bg-red-500' };
+    if (strength <= 70) return { strength, label: 'Средний', color: 'bg-yellow-500' };
+    return { strength, label: 'Сильный', color: 'bg-green-500' };
+  };
+
+  const passwordStrength = getPasswordStrength(regPassword);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +59,28 @@ export default function AdminAuth({ onLogin }: AdminAuthProps) {
       onLogin(regEmail, regPassword, regName, regRole);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative mb-8">
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 rounded-full blur-2xl opacity-50 animate-pulse" />
+            <div className="relative bg-gradient-to-br from-yellow-500 via-orange-500 to-red-600 p-6 rounded-full shadow-2xl">
+              <Icon name="ShieldCheck" className="h-16 w-16 text-white animate-pulse" />
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-4">SafetyTraining Pro</h2>
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-2 h-2 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+            <div className="w-2 h-2 bg-orange-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+            <div className="w-2 h-2 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          </div>
+          <p className="text-blue-200 mt-4 text-sm">Загрузка системы безопасности...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
@@ -51,9 +101,9 @@ export default function AdminAuth({ onLogin }: AdminAuthProps) {
         <Icon name="Flame" className="absolute top-1/2 right-1/4 h-24 w-24 text-white/5" />
       </div>
 
-      <div className="relative w-full max-w-md z-10">
+      <div className={`relative w-full max-w-md z-10 transition-all duration-700 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <div className="flex flex-col items-center mb-8">
-          <div className="relative">
+          <div className="relative animate-fade-in">
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 rounded-2xl blur-xl opacity-75 animate-pulse" />
             <div className="relative bg-gradient-to-br from-yellow-500 via-orange-500 to-red-600 p-5 rounded-2xl shadow-2xl">
               <Icon name="ShieldCheck" className="h-14 w-14 text-white drop-shadow-lg" />
@@ -67,7 +117,7 @@ export default function AdminAuth({ onLogin }: AdminAuthProps) {
           </p>
         </div>
 
-        <Card className="backdrop-blur-lg bg-white/95 shadow-2xl border-white/20">
+        <Card className="backdrop-blur-lg bg-white/95 shadow-2xl border-white/20 animate-slide-up">
           <CardHeader className="space-y-1 pb-6">
             <CardTitle className="text-2xl text-center bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               Вход для специалистов
@@ -125,7 +175,7 @@ export default function AdminAuth({ onLogin }: AdminAuthProps) {
                       />
                     </div>
                   </div>
-                  <Button type="submit" className="w-full h-11 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 text-base font-medium">
+                  <Button type="submit" className="w-full h-11 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg shadow-blue-500/30 text-base font-medium transition-all hover:scale-[1.02]">
                     <Icon name="LogIn" className="h-5 w-5 mr-2" />
                     Войти в систему
                   </Button>
@@ -183,6 +233,29 @@ export default function AdminAuth({ onLogin }: AdminAuthProps) {
                         required
                       />
                     </div>
+                    {regPassword && (
+                      <div className="space-y-2 mt-3">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="text-slate-600">Надёжность пароля:</span>
+                          <span className={`font-semibold ${
+                            passwordStrength.label === 'Слабый' ? 'text-red-600' :
+                            passwordStrength.label === 'Средний' ? 'text-yellow-600' :
+                            'text-green-600'
+                          }`}>
+                            {passwordStrength.label}
+                          </span>
+                        </div>
+                        <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full ${passwordStrength.color} transition-all duration-300 rounded-full`}
+                            style={{ width: `${passwordStrength.strength}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-slate-500">
+                          Используйте минимум 8 символов, включая заглавные буквы и цифры
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="reg-role" className="text-slate-700 font-medium">
@@ -201,7 +274,7 @@ export default function AdminAuth({ onLogin }: AdminAuthProps) {
                       </select>
                     </div>
                   </div>
-                  <Button type="submit" className="w-full h-11 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/30 text-base font-medium">
+                  <Button type="submit" className="w-full h-11 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg shadow-green-500/30 text-base font-medium transition-all hover:scale-[1.02]">
                     <Icon name="UserPlus" className="h-5 w-5 mr-2" />
                     Создать аккаунт
                   </Button>
@@ -211,7 +284,7 @@ export default function AdminAuth({ onLogin }: AdminAuthProps) {
           </CardContent>
         </Card>
 
-        <div className="mt-6 backdrop-blur-sm bg-white/10 rounded-xl p-4 border border-white/20">
+        <div className="mt-6 backdrop-blur-sm bg-white/10 rounded-xl p-4 border border-white/20 animate-fade-in-delayed">
           <div className="flex items-start gap-3">
             <Icon name="ShieldAlert" className="h-5 w-5 text-yellow-300 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-blue-100">
@@ -223,7 +296,7 @@ export default function AdminAuth({ onLogin }: AdminAuthProps) {
           </div>
         </div>
 
-        <div className="mt-4 text-center">
+        <div className="mt-4 text-center animate-fade-in-delayed">
           <p className="text-sm text-blue-200">
             Возникли вопросы? <button className="text-white font-medium underline hover:text-blue-300 transition-colors">Свяжитесь с поддержкой</button>
           </p>
