@@ -85,6 +85,34 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             
             return return_response(conn, cur, {'instructions': instructions})
         
+        elif path == 'instruction' and method == 'GET':
+            instruction_id = params.get('id')
+            if not instruction_id:
+                return return_response(conn, cur, {'error': 'Missing instruction id'}, 400)
+            
+            cur.execute("""
+                SELECT id, title, category, industry, profession, content, created_at, updated_at
+                FROM instructions
+                WHERE id = %s AND status = 'active'
+            """, (instruction_id,))
+            
+            row = cur.fetchone()
+            if not row:
+                return return_response(conn, cur, {'error': 'Instruction not found'}, 404)
+            
+            instruction = {
+                'id': row[0],
+                'title': row[1],
+                'category': row[2],
+                'industry': row[3],
+                'profession': row[4],
+                'content': row[5],
+                'createdAt': row[6].strftime('%Y-%m-%d') if row[6] else None,
+                'updatedAt': row[7].strftime('%Y-%m-%d') if row[7] else None
+            }
+            
+            return return_response(conn, cur, {'instruction': instruction})
+        
         elif path == 'instructions' and method == 'POST':
             body_data = json.loads(event.get('body', '{}'))
             title = body_data.get('title')

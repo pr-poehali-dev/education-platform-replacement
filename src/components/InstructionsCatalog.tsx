@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Instruction {
   id: string;
@@ -24,6 +27,8 @@ interface InstructionsCatalogProps {
   onGenerateClick: () => void;
 }
 
+const API_URL = 'https://functions.poehali.dev/26432853-bc16-442a-aabf-e90c33bae6c2';
+
 const getCategoryIcon = (category: string) => {
   const icons: Record<string, string> = {
     iot: 'ShieldCheck',
@@ -41,11 +46,30 @@ export default function InstructionsCatalog({
   setSelectedIndustry,
   onGenerateClick
 }: InstructionsCatalogProps) {
+  const [selectedInstruction, setSelectedInstruction] = useState<Instruction | null>(null);
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   const filteredInstructions = instructions.filter(inst => {
     if (selectedCategory !== 'all' && inst.category !== selectedCategory) return false;
     if (selectedIndustry !== 'all' && inst.industry !== selectedIndustry) return false;
     return true;
   });
+
+  const handleViewInstruction = async (instruction: Instruction) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${API_URL}?path=instruction&id=${instruction.id}`);
+      const data = await response.json();
+      setSelectedInstruction(data.instruction);
+      setShowPreviewDialog(true);
+    } catch (error) {
+      console.error('Failed to load instruction:', error);
+      alert('Не удалось загрузить инструкцию');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -103,7 +127,12 @@ export default function InstructionsCatalog({
             <CardContent>
               <div className="flex justify-between items-center text-sm text-muted-foreground">
                 <span>Обновлено: {new Date(instruction.lastUpdated).toLocaleDateString('ru-RU')}</span>
-                <Button variant="ghost" size="sm">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => handleViewInstruction(instruction)}
+                  disabled={isLoading}
+                >
                   <Icon name="Eye" className="h-4 w-4 mr-1" />
                   Открыть
                 </Button>
@@ -122,6 +151,56 @@ export default function InstructionsCatalog({
           </Button>
         </div>
       )}
+
+      <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
+        <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>{selectedInstruction?.title}</DialogTitle>
+            <DialogDescription>
+              {selectedInstruction?.profession} • {selectedInstruction?.industry}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedInstruction && (
+            <div className="flex-1 overflow-y-auto">
+              <Textarea
+                value={selectedInstruction.content || ''}
+                readOnly
+                className="min-h-[500px] font-mono text-sm"
+              />
+              
+              <div className="flex gap-2 mt-4">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => {
+                    const blob = new Blob([selectedInstruction.content || ''], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `${selectedInstruction.title}.txt`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                  }}
+                >
+                  <Icon name="Download" className="h-4 w-4 mr-2" />
+                  Скачать TXT
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => window.print()}
+                >
+                  <Icon name="Printer" className="h-4 w-4 mr-2" />
+                  Печать
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
