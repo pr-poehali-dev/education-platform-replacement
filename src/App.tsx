@@ -63,12 +63,26 @@ function App() {
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Проверяем hash для прямого входа слушателя
+    const hash = window.location.hash;
+    if (hash === '#/listener-direct') {
+      const tempLoginData = localStorage.getItem('temp_listener_login');
+      if (tempLoginData) {
+        const listenerData = JSON.parse(tempLoginData);
+        setListenerUser(listenerData);
+        setUserRole('listener');
+        setCurrentView('listener-dashboard');
+        localStorage.removeItem('temp_listener_login');
+        window.location.hash = '';
+        return;
+      }
+    }
+
     // Проверяем URL параметры
     const urlParams = new URLSearchParams(window.location.search);
     let listenerId = urlParams.get('listener');
     
-    // Проверяем hash-based routing
-    const hash = window.location.hash;
+    // Проверяем hash-based routing для обычного входа
     const hashMatch = hash.match(/\/listener\/([^/]+)/);
     if (hashMatch) {
       listenerId = hashMatch[1];
@@ -185,14 +199,20 @@ function App() {
     const listener = listeners.find((l: any) => l.id === listenerId);
     if (!listener) return;
 
-    setListenerUser({ 
-      fullName: listener.fullName, 
-      position: listener.position, 
-      department: listener.department, 
-      listenerId: listener.id 
-    });
-    setUserRole('listener');
-    setCurrentView('listener-dashboard');
+    const listenerData = {
+      fullName: listener.fullName,
+      position: listener.position,
+      department: listener.department,
+      listenerId: listener.id
+    };
+
+    localStorage.setItem('temp_listener_login', JSON.stringify(listenerData));
+    
+    const newWindow = window.open(window.location.origin + '/#/listener-direct', '_blank');
+    
+    if (!newWindow) {
+      alert('Пожалуйста, разрешите всплывающие окна для этого сайта');
+    }
   };
 
   const handleSaveListenerPrograms = () => {
