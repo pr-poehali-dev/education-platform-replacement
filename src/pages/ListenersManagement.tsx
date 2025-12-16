@@ -2,9 +2,18 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 interface Listener {
   id: string;
@@ -21,12 +30,19 @@ interface Listener {
 interface ListenersManagementProps {
   onBack: () => void;
   onConfigureListener: (listenerId: string) => void;
+  onGoToListenerAuth: (listenerId: string) => void;
 }
 
-export default function ListenersManagement({ onBack, onConfigureListener }: ListenersManagementProps) {
+export default function ListenersManagement({ onBack, onConfigureListener, onGoToListenerAuth }: ListenersManagementProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  
-  const listeners: Listener[] = [];
+  const [showRegisterDialog, setShowRegisterDialog] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [newListener, setNewListener] = useState({
+    fullName: '',
+    position: '',
+    department: ''
+  });
+  const [listeners, setListeners] = useState<Listener[]>([]);
 
   const filteredListeners = listeners.filter(listener => 
     listener.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -34,9 +50,36 @@ export default function ListenersManagement({ onBack, onConfigureListener }: Lis
     listener.department.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const generateListenerId = () => {
+    return 'L' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+  };
+
+  const handleRegisterListener = () => {
+    if (!newListener.fullName || !newListener.position || !newListener.department) return;
+    
+    const listenerId = generateListenerId();
+    const newListenerData: Listener = {
+      id: listenerId,
+      fullName: newListener.fullName,
+      position: newListener.position,
+      department: newListener.department,
+      assignedPrograms: [],
+      completedPrograms: 0,
+      totalPrograms: 0,
+      progress: 0,
+      lastActivity: new Date().toISOString()
+    };
+    
+    setListeners([...listeners, newListenerData]);
+    setNewListener({ fullName: '', position: '', department: '' });
+    setShowRegisterDialog(false);
+  };
+
   const copyListenerLink = (listenerId: string) => {
-    const link = `${window.location.origin}/listener/${listenerId}`;
+    const link = `${window.location.origin}/#/listener/${listenerId}`;
     navigator.clipboard.writeText(link);
+    setCopiedId(listenerId);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   return (
@@ -65,16 +108,25 @@ export default function ListenersManagement({ onBack, onConfigureListener }: Lis
               <h2 className="text-2xl font-bold">Список слушателей</h2>
               <p className="text-muted-foreground">Всего слушателей: {listeners.length}</p>
             </div>
-            <div className="w-full md:w-96">
-              <div className="relative">
-                <Icon name="Search" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Поиск по ФИО, должности, подразделению..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
+            <div className="flex gap-3 w-full md:w-auto">
+              <div className="flex-1 md:w-96">
+                <div className="relative">
+                  <Icon name="Search" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Поиск по ФИО, должности, подразделению..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
               </div>
+              <Button 
+                onClick={() => setShowRegisterDialog(true)}
+                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 whitespace-nowrap"
+              >
+                <Icon name="UserPlus" className="h-4 w-4 mr-2" />
+                Зарегистрировать
+              </Button>
             </div>
           </div>
 
@@ -136,16 +188,27 @@ export default function ListenersManagement({ onBack, onConfigureListener }: Lis
                       <Button 
                         variant="outline"
                         onClick={() => copyListenerLink(listener.id)}
-                        className="flex-1 min-w-[200px]"
+                        className="flex-1 min-w-[180px]"
                       >
-                        <Icon name="Link" className="h-4 w-4 mr-2" />
-                        Скопировать ссылку
+                        {copiedId === listener.id ? (
+                          <>
+                            <Icon name="Check" className="h-4 w-4 mr-2 text-green-600" />
+                            <span className="text-green-600">Скопировано!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Icon name="Link" className="h-4 w-4 mr-2" />
+                            Скопировать ссылку
+                          </>
+                        )}
                       </Button>
                       <Button 
                         variant="outline"
-                        size="icon"
+                        onClick={() => onGoToListenerAuth(listener.id)}
+                        className="flex-1 min-w-[180px]"
                       >
-                        <Icon name="Mail" className="h-4 w-4" />
+                        <Icon name="LogIn" className="h-4 w-4 mr-2" />
+                        Выход в ЛК
                       </Button>
                     </div>
                   </div>
@@ -158,9 +221,20 @@ export default function ListenersManagement({ onBack, onConfigureListener }: Lis
             <Card>
               <CardContent className="py-12 text-center">
                 <Icon name="Users" className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">
-                  Слушатели не найдены. Попробуйте изменить условия поиска.
+                <p className="text-muted-foreground mb-4">
+                  {listeners.length === 0 
+                    ? 'Пока нет зарегистрированных слушателей' 
+                    : 'Слушатели не найдены. Попробуйте изменить условия поиска.'}
                 </p>
+                {listeners.length === 0 && (
+                  <Button 
+                    onClick={() => setShowRegisterDialog(true)}
+                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                  >
+                    <Icon name="UserPlus" className="h-4 w-4 mr-2" />
+                    Зарегистрировать первого слушателя
+                  </Button>
+                )}
               </CardContent>
             </Card>
           )}
@@ -174,13 +248,73 @@ export default function ListenersManagement({ onBack, onConfigureListener }: Lis
             </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-blue-900 space-y-2">
-            <p>• При первом переходе по ссылке слушатель заполняет свои данные (ФИО, должность, подразделение)</p>
-            <p>• Система автоматически создаёт личный кабинет и сохраняет весь прогресс</p>
-            <p>• Слушатель может проходить обучение с любого устройства по своей уникальной ссылке</p>
+            <p>• После регистрации система генерирует уникальную ссылку для входа</p>
+            <p>• Скопируйте ссылку и отправьте слушателю любым удобным способом</p>
+            <p>• Слушатель переходит по ссылке и попадает на страницу входа в личный кабинет</p>
             <p>• Все назначенные программы будут доступны в его личном кабинете</p>
           </CardContent>
         </Card>
       </main>
+
+      <Dialog open={showRegisterDialog} onOpenChange={setShowRegisterDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Icon name="UserPlus" className="h-5 w-5" />
+              Регистрация нового слушателя
+            </DialogTitle>
+            <DialogDescription>
+              Заполните данные для создания личного кабинета
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="fullName">ФИО полностью</Label>
+              <Input
+                id="fullName"
+                placeholder="Иванов Иван Иванович"
+                value={newListener.fullName}
+                onChange={(e) => setNewListener({ ...newListener, fullName: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="position">Должность / Профессия</Label>
+              <Input
+                id="position"
+                placeholder="Электромонтер, Слесарь, Инженер..."
+                value={newListener.position}
+                onChange={(e) => setNewListener({ ...newListener, position: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="department">Подразделение</Label>
+              <Input
+                id="department"
+                placeholder="Цех №1, Отдел ПТО, Участок..."
+                value={newListener.department}
+                onChange={(e) => setNewListener({ ...newListener, department: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRegisterDialog(false)}>
+              Отмена
+            </Button>
+            <Button 
+              onClick={handleRegisterListener}
+              disabled={!newListener.fullName || !newListener.position || !newListener.department}
+              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+            >
+              <Icon name="Check" className="h-4 w-4 mr-2" />
+              Зарегистрировать
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

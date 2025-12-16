@@ -53,8 +53,16 @@ function App() {
   const [selectedListenerId, setSelectedListenerId] = useState<string | null>(null);
 
   useEffect(() => {
+    // Проверяем URL параметры
     const urlParams = new URLSearchParams(window.location.search);
-    const listenerId = urlParams.get('listener');
+    let listenerId = urlParams.get('listener');
+    
+    // Проверяем hash-based routing
+    const hash = window.location.hash;
+    const hashMatch = hash.match(/\/listener\/([^/]+)/);
+    if (hashMatch) {
+      listenerId = hashMatch[1];
+    }
     
     if (listenerId) {
       setSelectedListenerId(listenerId);
@@ -109,6 +117,11 @@ function App() {
   const handleConfigureListener = (listenerId: string) => {
     setSelectedListenerId(listenerId);
     setCurrentView('listener-programs-setup');
+  };
+
+  const handleGoToListenerAuth = (listenerId: string) => {
+    setSelectedListenerId(listenerId);
+    setCurrentView('listener-auth');
   };
 
   const handleSaveListenerPrograms = () => {
@@ -195,6 +208,7 @@ function App() {
       <ListenersManagement
         onBack={handleBackToAdminHome}
         onConfigureListener={handleConfigureListener}
+        onGoToListenerAuth={handleGoToListenerAuth}
       />
     );
   }
