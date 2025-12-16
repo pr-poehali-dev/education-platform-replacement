@@ -1,0 +1,36 @@
+{
+  "tests": [
+    {
+      "name": "Generate IOT instruction",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "type": "iot",
+        "title": "ИОТ при работе с болгаркой",
+        "category": "Электроинструмент",
+        "prompt": "Инструкция для работы с угловой шлифовальной машиной при резке металла"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "content": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Generate training program",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "type": "program",
+        "title": "Программа обучения электробезопасности",
+        "category": "Электробезопасность",
+        "prompt": "Программа для электромонтеров 2-3 группы допуска"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "content": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

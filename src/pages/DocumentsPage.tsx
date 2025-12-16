@@ -99,37 +99,26 @@ export default function DocumentsPage({ onBack }: DocumentsPageProps) {
 
     setIsGenerating(true);
 
-    // Симуляция генерации через ИИ
-    setTimeout(() => {
-      const generatedContent = `# ${newDocument.title}
+    try {
+      const response = await fetch('https://functions.poehali.dev/10e5d546-414f-4059-8c93-a33a547cf157', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: newDocument.type,
+          title: newDocument.title,
+          category: newDocument.category,
+          prompt: newDocument.prompt
+        })
+      });
 
-## 1. Общие положения
-1.1. Настоящая инструкция разработана в соответствии с требованиями законодательства РФ.
-1.2. Инструкция определяет порядок выполнения работ и меры безопасности.
+      if (!response.ok) {
+        throw new Error('Ошибка при генерации документа');
+      }
 
-## 2. Требования безопасности перед началом работы
-2.1. Проверить исправность оборудования и инструментов.
-2.2. Надеть необходимые средства индивидуальной защиты.
-2.3. Осмотреть рабочее место на предмет опасных факторов.
-
-## 3. Требования безопасности во время работы
-3.1. Соблюдать технологическую последовательность операций.
-3.2. Использовать инструмент строго по назначению.
-3.3. Не допускать посторонних лиц на рабочее место.
-
-## 4. Требования безопасности в аварийных ситуациях
-4.1. При возникновении аварийной ситуации прекратить работу.
-4.2. Сообщить непосредственному руководителю.
-4.3. Принять меры по ликвидации последствий.
-
-## 5. Требования безопасности по окончании работы
-5.1. Привести в порядок рабочее место.
-5.2. Убрать инструмент и оборудование в отведенные места.
-5.3. Сообщить руководителю о всех недостатках.
-
----
-*Документ создан с помощью ИИ-ассистента ГорТех Аттестация*
-*Дата создания: ${new Date().toLocaleDateString('ru-RU')}*`;
+      const data = await response.json();
+      const generatedContent = data.content;
 
       const document: Document = {
         id: documents.length + 1,
@@ -142,7 +131,6 @@ export default function DocumentsPage({ onBack }: DocumentsPageProps) {
       };
 
       setDocuments([document, ...documents]);
-      setIsGenerating(false);
       setShowCreateDialog(false);
       setNewDocument({
         type: '',
@@ -150,7 +138,12 @@ export default function DocumentsPage({ onBack }: DocumentsPageProps) {
         category: '',
         prompt: ''
       });
-    }, 3000);
+    } catch (error) {
+      console.error('Ошибка генерации:', error);
+      alert('Не удалось сгенерировать документ. Попробуйте еще раз.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleViewDocument = (doc: Document) => {
