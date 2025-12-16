@@ -24,6 +24,7 @@ interface Admin {
   role: 'ot' | 'pb';
   status: 'active' | 'inactive';
   addedDate: string;
+  loginToken: string;
 }
 
 export default function AdminManagement({ onBack }: AdminManagementProps) {
@@ -31,6 +32,7 @@ export default function AdminManagement({ onBack }: AdminManagementProps) {
   const [newAdminName, setNewAdminName] = useState('');
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAdminRole, setNewAdminRole] = useState<'ot' | 'pb'>('ot');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const [admins, setAdmins] = useState<Admin[]>([
     {
@@ -39,7 +41,8 @@ export default function AdminManagement({ onBack }: AdminManagementProps) {
       email: 'ivanova@company.ru',
       role: 'ot',
       status: 'active',
-      addedDate: '15.01.2024'
+      addedDate: '15.01.2024',
+      loginToken: 'token_' + Math.random().toString(36).substring(2, 15)
     },
     {
       id: '2',
@@ -47,9 +50,38 @@ export default function AdminManagement({ onBack }: AdminManagementProps) {
       email: 'petrov@company.ru',
       role: 'pb',
       status: 'active',
-      addedDate: '20.02.2024'
+      addedDate: '20.02.2024',
+      loginToken: 'token_' + Math.random().toString(36).substring(2, 15)
     }
   ]);
+
+  const generateLoginUrl = (admin: Admin) => {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/admin-login?token=${admin.loginToken}&email=${encodeURIComponent(admin.email)}`;
+  };
+
+  const copyLoginUrl = async (admin: Admin) => {
+    const url = generateLoginUrl(admin);
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedId(admin.id);
+      setTimeout(() => setCopiedId(null), 2000);
+    } catch (err) {
+      alert('Не удалось скопировать ссылку');
+    }
+  };
+
+  const sendLoginEmail = (admin: Admin) => {
+    const url = generateLoginUrl(admin);
+    const subject = encodeURIComponent('Ссылка для входа в систему обучения');
+    const body = encodeURIComponent(
+      `Здравствуйте, ${admin.name}!\n\n` +
+      `Ваша персональная ссылка для входа в систему:\n${url}\n\n` +
+      `Отдел: ${admin.role === 'ot' ? 'Охрана труда' : 'Пожарная безопасность'}\n\n` +
+      `С уважением,\nСистема управления обучением`
+    );
+    window.open(`mailto:${admin.email}?subject=${subject}&body=${body}`, '_blank');
+  };
 
   const handleAddAdmin = () => {
     if (newAdminName && newAdminEmail) {
@@ -59,13 +91,20 @@ export default function AdminManagement({ onBack }: AdminManagementProps) {
         email: newAdminEmail,
         role: newAdminRole,
         status: 'active',
-        addedDate: new Date().toLocaleDateString('ru-RU')
+        addedDate: new Date().toLocaleDateString('ru-RU'),
+        loginToken: 'token_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36)
       };
       setAdmins([...admins, newAdmin]);
       setShowAddDialog(false);
       setNewAdminName('');
       setNewAdminEmail('');
       setNewAdminRole('ot');
+      
+      setTimeout(() => {
+        if (confirm(`Администратор создан! Отправить ссылку для входа на ${newAdmin.email}?`)) {
+          sendLoginEmail(newAdmin);
+        }
+      }, 300);
     }
   };
 
@@ -145,23 +184,43 @@ export default function AdminManagement({ onBack }: AdminManagementProps) {
                     <span className="text-muted-foreground">Добавлен</span>
                     <span>{admin.addedDate}</span>
                   </div>
-                  <div className="flex gap-2 pt-4 border-t">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="flex-1"
-                      onClick={() => toggleAdminStatus(admin.id)}
-                    >
-                      <Icon name={admin.status === 'active' ? 'Ban' : 'Check'} className="h-4 w-4 mr-2" />
-                      {admin.status === 'active' ? 'Деактивировать' : 'Активировать'}
-                    </Button>
-                    <Button 
-                      variant="destructive" 
-                      size="sm"
-                      onClick={() => deleteAdmin(admin.id)}
-                    >
-                      <Icon name="Trash2" className="h-4 w-4" />
-                    </Button>
+                  <div className="space-y-2 pt-4 border-t">
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => copyLoginUrl(admin)}
+                      >
+                        <Icon name={copiedId === admin.id ? 'Check' : 'Link'} className="h-4 w-4 mr-2" />
+                        {copiedId === admin.id ? 'Скопировано!' : 'Скопировать ссылку'}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => sendLoginEmail(admin)}
+                      >
+                        <Icon name="Mail" className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => toggleAdminStatus(admin.id)}
+                      >
+                        <Icon name={admin.status === 'active' ? 'Ban' : 'Check'} className="h-4 w-4 mr-2" />
+                        {admin.status === 'active' ? 'Деактивировать' : 'Активировать'}
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={() => deleteAdmin(admin.id)}
+                      >
+                        <Icon name="Trash2" className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
