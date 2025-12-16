@@ -184,6 +184,56 @@ export default function ListenersManagement({ onBack, onConfigureListener, onGoT
     reader.readAsArrayBuffer(file);
   };
 
+  const exportListenersToExcel = () => {
+    // Экспортируем отфильтрованный список, если активен поиск
+    const dataToExport = searchQuery ? filteredListeners : listeners;
+    
+    if (dataToExport.length === 0) {
+      return;
+    }
+
+    const exportData = dataToExport.map((listener, index) => ({
+      '№': index + 1,
+      'ФИО': listener.fullName,
+      'Должность': listener.position,
+      'Подразделение': listener.department,
+      'Назначенные программы': listener.assignedPrograms.join(', ') || 'Нет',
+      'Назначено программ': listener.totalPrograms,
+      'Завершено программ': listener.completedPrograms,
+      'Прогресс %': listener.progress,
+      'Последняя активность': new Date(listener.lastActivity).toLocaleDateString('ru-RU'),
+      'Ссылка для входа': `${window.location.origin}/#/listener/${listener.id}`,
+      'ID слушателя': listener.id
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    
+    // Устанавливаем ширину колонок
+    worksheet['!cols'] = [
+      { wch: 5 },  // №
+      { wch: 35 }, // ФИО
+      { wch: 25 }, // Должность
+      { wch: 25 }, // Подразделение
+      { wch: 40 }, // Назначенные программы
+      { wch: 18 }, // Назначено программ
+      { wch: 18 }, // Завершено программ
+      { wch: 12 }, // Прогресс %
+      { wch: 20 }, // Последняя активность
+      { wch: 60 }, // Ссылка для входа
+      { wch: 20 }  // ID слушателя
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Список слушателей');
+    
+    const currentDate = new Date().toLocaleDateString('ru-RU').replace(/\./g, '_');
+    const fileName = searchQuery 
+      ? `Слушатели_отфильтровано_${currentDate}.xlsx`
+      : `Слушатели_${currentDate}.xlsx`;
+    
+    XLSX.writeFile(workbook, fileName);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <header className="bg-white border-b sticky top-0 z-50 shadow-sm">
@@ -210,8 +260,8 @@ export default function ListenersManagement({ onBack, onConfigureListener, onGoT
               <h2 className="text-2xl font-bold">Список слушателей</h2>
               <p className="text-muted-foreground">Всего слушателей: {listeners.length}</p>
             </div>
-            <div className="flex gap-3 w-full md:w-auto">
-              <div className="flex-1 md:w-96">
+            <div className="flex gap-3 w-full md:w-auto flex-wrap">
+              <div className="flex-1 md:w-96 min-w-[200px]">
                 <div className="relative">
                   <Icon name="Search" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -223,11 +273,26 @@ export default function ListenersManagement({ onBack, onConfigureListener, onGoT
                 </div>
               </div>
               <Button 
+                onClick={exportListenersToExcel}
+                variant="outline"
+                className="whitespace-nowrap"
+                disabled={listeners.length === 0}
+                title={searchQuery ? `Экспорт ${filteredListeners.length} отфильтрованных слушателей` : `Экспорт всех ${listeners.length} слушателей`}
+              >
+                <Icon name="Download" className="h-4 w-4 mr-2" />
+                Экспорт Excel
+                {searchQuery && filteredListeners.length > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {filteredListeners.length}
+                  </Badge>
+                )}
+              </Button>
+              <Button 
                 onClick={() => setShowImportDialog(true)}
                 variant="outline"
                 className="whitespace-nowrap"
               >
-                <Icon name="FileSpreadsheet" className="h-4 w-4 mr-2" />
+                <Icon name="Upload" className="h-4 w-4 mr-2" />
                 Импорт Excel
               </Button>
               <Button 
@@ -350,20 +415,37 @@ export default function ListenersManagement({ onBack, onConfigureListener, onGoT
           )}
         </div>
 
-        <Card className="bg-blue-50 border-blue-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Icon name="Info" className="h-5 w-5 text-blue-600" />
-              Как работают персональные ссылки
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-blue-900 space-y-2">
-            <p>• После регистрации система генерирует уникальную ссылку для входа</p>
-            <p>• Скопируйте ссылку и отправьте слушателю любым удобным способом</p>
-            <p>• Слушатель переходит по ссылке и попадает на страницу входа в личный кабинет</p>
-            <p>• Все назначенные программы будут доступны в его личном кабинете</p>
-          </CardContent>
-        </Card>
+        <div className="grid md:grid-cols-2 gap-6">
+          <Card className="bg-blue-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Icon name="Info" className="h-5 w-5 text-blue-600" />
+                Персональные ссылки
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-blue-900 space-y-2">
+              <p>• После регистрации система генерирует уникальную ссылку для входа</p>
+              <p>• Скопируйте ссылку и отправьте слушателю любым удобным способом</p>
+              <p>• Слушатель переходит по ссылке и попадает на страницу входа в личный кабинет</p>
+              <p>• Все назначенные программы будут доступны в его личном кабинете</p>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-green-50 border-green-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Icon name="FileSpreadsheet" className="h-5 w-5 text-green-600" />
+                Работа с Excel
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-sm text-green-900 space-y-2">
+              <p>• <strong>Импорт:</strong> Массовая регистрация слушателей из Excel-файла</p>
+              <p>• <strong>Экспорт:</strong> Выгрузка всех слушателей с прогрессом обучения</p>
+              <p>• <strong>Формат:</strong> ФИО, Должность, Подразделение (обязательные поля)</p>
+              <p>• <strong>Образец:</strong> Скачайте шаблон для заполнения через диалог импорта</p>
+            </CardContent>
+          </Card>
+        </div>
       </main>
 
       <Dialog open={showRegisterDialog} onOpenChange={setShowRegisterDialog}>
