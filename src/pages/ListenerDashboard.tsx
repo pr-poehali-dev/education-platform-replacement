@@ -237,7 +237,7 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
         </Card>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="bg-white grid grid-cols-5 w-full">
+          <TabsList className="bg-white grid grid-cols-6 w-full">
             <TabsTrigger value="my-page">
               <Icon name="Home" className="h-4 w-4 mr-2" />
               Моя страница
@@ -253,6 +253,10 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
             <TabsTrigger value="testing">
               <Icon name="ClipboardCheck" className="h-4 w-4 mr-2" />
               Блок тестирования
+            </TabsTrigger>
+            <TabsTrigger value="progress">
+              <Icon name="TrendingUp" className="h-4 w-4 mr-2" />
+              Прогресс
             </TabsTrigger>
             <TabsTrigger value="instructions">
               <Icon name="FileText" className="h-4 w-4 mr-2" />
@@ -597,6 +601,206 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
               protocolData={protocolData}
               currentUser={{ name: listener.fullName, role: 'student', position: listener.position }}
             />
+          </TabsContent>
+
+          <TabsContent value="progress">
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold">Прогресс обучения</h2>
+                <p className="text-muted-foreground">Визуализация пройденных модулей и оставшихся тестов</p>
+              </div>
+
+              {assignedPrograms.length === 0 ? (
+                <Card className="border-2 border-dashed">
+                  <CardContent className="pt-12 pb-12 text-center">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                      <Icon name="TrendingUp" className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">Нет данных о прогрессе</h3>
+                    <p className="text-muted-foreground max-w-md mx-auto">
+                      Когда администратор назначит вам программы обучения, здесь появится детальная информация о вашем прогрессе.
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid md:grid-cols-3 gap-6">
+                    <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
+                      <CardHeader>
+                        <div className="flex items-center gap-3">
+                          <div className="bg-gradient-to-br from-blue-500 to-indigo-500 p-3 rounded-xl">
+                            <Icon name="BookOpen" className="h-6 w-6 text-white" />
+                          </div>
+                          <div>
+                            <CardDescription className="text-blue-700">Всего программ</CardDescription>
+                            <CardTitle className="text-3xl text-blue-900">{assignedPrograms.length}</CardTitle>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
+
+                    <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50">
+                      <CardHeader>
+                        <div className="flex items-center gap-3">
+                          <div className="bg-gradient-to-br from-green-500 to-emerald-500 p-3 rounded-xl">
+                            <Icon name="CheckCircle" className="h-6 w-6 text-white" />
+                          </div>
+                          <div>
+                            <CardDescription className="text-green-700">Завершено</CardDescription>
+                            <CardTitle className="text-3xl text-green-900">
+                              {assignedPrograms.filter(p => p.status === 'completed').length}
+                            </CardTitle>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
+
+                    <Card className="border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50">
+                      <CardHeader>
+                        <div className="flex items-center gap-3">
+                          <div className="bg-gradient-to-br from-orange-500 to-yellow-500 p-3 rounded-xl">
+                            <Icon name="Clock" className="h-6 w-6 text-white" />
+                          </div>
+                          <div>
+                            <CardDescription className="text-orange-700">В процессе</CardDescription>
+                            <CardTitle className="text-3xl text-orange-900">
+                              {assignedPrograms.filter(p => p.status === 'in-progress').length}
+                            </CardTitle>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  </div>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Детальный прогресс по программам</CardTitle>
+                      <CardDescription>Модули, тесты и общий прогресс</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-6">
+                        {assignedPrograms.map((program) => {
+                          const completedModules = Math.floor((program.progress / 100) * (program.modules?.length || 0));
+                          const totalModules = program.modules?.length || 0;
+                          const testAvailable = program.progress === 100;
+                          const testCompleted = program.status === 'completed';
+
+                          return (
+                            <div key={program.id} className="border-2 rounded-xl p-6 hover:shadow-lg transition-all">
+                              <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-start gap-4">
+                                  <div className={`bg-gradient-to-br ${program.color} p-3 rounded-xl`}>
+                                    <Icon name={program.icon} className="h-6 w-6 text-white" />
+                                  </div>
+                                  <div>
+                                    <h3 className="font-semibold text-lg mb-1">{program.title}</h3>
+                                    <p className="text-sm text-muted-foreground">{program.department}</p>
+                                  </div>
+                                </div>
+                                <Badge variant={program.status === 'completed' ? 'default' : program.status === 'in-progress' ? 'secondary' : 'outline'}>
+                                  {program.status === 'completed' ? 'Завершено' : program.status === 'in-progress' ? 'В процессе' : 'Не начато'}
+                                </Badge>
+                              </div>
+
+                              <div className="space-y-4">
+                                <div>
+                                  <div className="flex items-center justify-between mb-2">
+                                    <span className="text-sm font-medium">Общий прогресс</span>
+                                    <span className="text-lg font-bold text-blue-600">{program.progress}%</span>
+                                  </div>
+                                  <Progress value={program.progress} className="h-3" />
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-6">
+                                  <div className="space-y-3">
+                                    <div className="flex items-center gap-2 font-medium">
+                                      <Icon name="BookMarked" className="h-5 w-5 text-blue-600" />
+                                      <span>Модули обучения</span>
+                                    </div>
+                                    <div className="space-y-2 pl-7">
+                                      <div className="flex items-center justify-between text-sm">
+                                        <span className="text-muted-foreground">Пройдено модулей</span>
+                                        <span className="font-semibold">{completedModules} / {totalModules}</span>
+                                      </div>
+                                      <div className="flex items-center justify-between text-sm">
+                                        <span className="text-muted-foreground">Часов изучения</span>
+                                        <span className="font-semibold">{program.totalHours}ч</span>
+                                      </div>
+                                      <div className="flex items-center justify-between text-sm">
+                                        <span className="text-muted-foreground">Срок выполнения</span>
+                                        <span className="font-semibold text-orange-600">{program.deadline}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="space-y-3">
+                                    <div className="flex items-center gap-2 font-medium">
+                                      <Icon name="ClipboardCheck" className="h-5 w-5 text-purple-600" />
+                                      <span>Тестирование</span>
+                                    </div>
+                                    <div className="space-y-2 pl-7">
+                                      <div className="flex items-center gap-2 text-sm">
+                                        {testCompleted ? (
+                                          <>
+                                            <Icon name="CheckCircle" className="h-4 w-4 text-green-600" />
+                                            <span className="text-green-600 font-semibold">Тест успешно пройден</span>
+                                          </>
+                                        ) : testAvailable ? (
+                                          <>
+                                            <Icon name="AlertCircle" className="h-4 w-4 text-orange-600" />
+                                            <span className="text-orange-600 font-semibold">Тест доступен</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Icon name="Lock" className="h-4 w-4 text-gray-400" />
+                                            <span className="text-muted-foreground">Недоступен</span>
+                                          </>
+                                        )}
+                                      </div>
+                                      <div className="text-xs text-muted-foreground pl-6">
+                                        {testCompleted 
+                                          ? 'Вы успешно прошли итоговое тестирование'
+                                          : testAvailable 
+                                          ? 'Завершите обучение, чтобы открыть тест'
+                                          : `Осталось завершить: ${100 - program.progress}%`
+                                        }
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {program.status !== 'completed' && (
+                                  <div className="flex items-center gap-3 pt-4 border-t">
+                                    <Button 
+                                      onClick={() => onStartLearning?.(program.id)}
+                                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                                    >
+                                      <Icon name="Play" className="h-4 w-4 mr-2" />
+                                      {program.status === 'in-progress' ? 'Продолжить обучение' : 'Начать обучение'}
+                                    </Button>
+                                    {testAvailable && (
+                                      <Button 
+                                        onClick={() => {
+                                          setActiveTab('testing');
+                                        }}
+                                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                                      >
+                                        <Icon name="ClipboardCheck" className="h-4 w-4 mr-2" />
+                                        Перейти к тесту
+                                      </Button>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="instructions">
