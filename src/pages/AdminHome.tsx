@@ -1,8 +1,14 @@
+import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface AdminHomeProps {
   user: {
@@ -17,6 +23,70 @@ interface AdminHomeProps {
 export default function AdminHome({ user, onLogout, onNavigate }: AdminHomeProps) {
   const isSuperAdmin = user.email === 'nshrkonstantin@gmail.com';
   const departmentName = user.role === 'ot' ? 'Охрана труда' : user.role === 'pb' ? 'Пожарная безопасность' : 'Главный администратор';
+  const [notifications, setNotifications] = useState<Array<{
+    id: string;
+    type: 'new_listener' | 'program_completed' | 'test_failed';
+    message: string;
+    timestamp: string;
+    read: boolean;
+    listenerName?: string;
+  }>>([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  useEffect(() => {
+    const savedNotifications = localStorage.getItem('admin_notifications');
+    if (savedNotifications) {
+      setNotifications(JSON.parse(savedNotifications));
+    }
+
+    const checkInterval = setInterval(() => {
+      const saved = localStorage.getItem('admin_notifications');
+      if (saved) {
+        setNotifications(JSON.parse(saved));
+      }
+    }, 3000);
+
+    return () => clearInterval(checkInterval);
+  }, []);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const markAsRead = (id: string) => {
+    const updated = notifications.map(n => 
+      n.id === id ? { ...n, read: true } : n
+    );
+    setNotifications(updated);
+    localStorage.setItem('admin_notifications', JSON.stringify(updated));
+  };
+
+  const markAllAsRead = () => {
+    const updated = notifications.map(n => ({ ...n, read: true }));
+    setNotifications(updated);
+    localStorage.setItem('admin_notifications', JSON.stringify(updated));
+  };
+
+  const clearNotifications = () => {
+    setNotifications([]);
+    localStorage.removeItem('admin_notifications');
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'new_listener': return 'UserPlus';
+      case 'program_completed': return 'CheckCircle';
+      case 'test_failed': return 'AlertCircle';
+      default: return 'Bell';
+    }
+  };
+
+  const getNotificationColor = (type: string) => {
+    switch (type) {
+      case 'new_listener': return 'text-green-600';
+      case 'program_completed': return 'text-blue-600';
+      case 'test_failed': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
+  };
 
   const menuItems = [
     {
@@ -104,9 +174,91 @@ export default function AdminHome({ user, onLogout, onNavigate }: AdminHomeProps
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon">
-                <Icon name="Bell" className="h-5 w-5" />
-              </Button>
+              <Popover open={showNotifications} onOpenChange={setShowNotifications}>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative">
+                    <Icon name="Bell" className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                      </span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-96 p-0" align="end">
+                  <div className="bg-white rounded-lg shadow-xl">
+                    <div className="p-4 border-b flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold text-lg">Уведомления</h3>
+                        <p className="text-xs text-muted-foreground">
+                          {unreadCount > 0 ? `${unreadCount} новых` : 'Нет новых уведомлений'}
+                        </p>
+                      </div>
+                      {notifications.length > 0 && (
+                        <div className="flex gap-1">
+                          {unreadCount > 0 && (
+                            <Button variant="ghost" size="sm" onClick={markAllAsRead}>
+                              <Icon name="CheckCheck" className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button variant="ghost" size="sm" onClick={clearNotifications}>
+                            <Icon name="Trash2" className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="max-h-96 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="p-8 text-center">
+                          <Icon name="Bell" className="h-12 w-12 text-gray-300 mx-auto mb-2" />
+                          <p className="text-sm text-muted-foreground">Уведомлений пока нет</p>
+                        </div>
+                      ) : (
+                        notifications.slice().reverse().map((notification) => (
+                          <div
+                            key={notification.id}
+                            className={`p-4 border-b hover:bg-gray-50 transition-colors cursor-pointer ${
+                              !notification.read ? 'bg-blue-50' : ''
+                            }`}
+                            onClick={() => {
+                              markAsRead(notification.id);
+                              if (notification.type === 'new_listener') {
+                                setShowNotifications(false);
+                                onNavigate('listeners');
+                              }
+                            }}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className={`p-2 rounded-lg ${getNotificationColor(notification.type)} bg-opacity-10`}>
+                                <Icon name={getNotificationIcon(notification.type)} className={`h-5 w-5 ${getNotificationColor(notification.type)}`} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm ${
+                                  !notification.read ? 'font-semibold' : 'font-normal'
+                                }`}>
+                                  {notification.message}
+                                </p>
+                                {notification.listenerName && (
+                                  <p className="text-xs text-blue-600 mt-1">
+                                    {notification.listenerName}
+                                  </p>
+                                )}
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {new Date(notification.timestamp).toLocaleString('ru-RU')}
+                                </p>
+                              </div>
+                              {!notification.read && (
+                                <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2" />
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
               <div className="flex items-center gap-2">
                 <Avatar>
                   <AvatarFallback className={`${isSuperAdmin ? 'bg-gradient-to-br from-purple-500 to-pink-500' : 'bg-gradient-to-br from-blue-500 to-indigo-500'} text-white`}>

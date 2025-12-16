@@ -115,6 +115,19 @@ function App() {
       };
       listeners.push(newListener);
       localStorage.setItem('listeners', JSON.stringify(listeners));
+      
+      // Создаём уведомление для администратора
+      const notifications = JSON.parse(localStorage.getItem('admin_notifications') || '[]');
+      const newNotification = {
+        id: `notif_${Date.now()}`,
+        type: 'new_listener',
+        message: 'Новый слушатель зарегистрировался в системе',
+        listenerName: fullName,
+        timestamp: new Date().toISOString(),
+        read: false
+      };
+      notifications.push(newNotification);
+      localStorage.setItem('admin_notifications', JSON.stringify(notifications));
     } else {
       // Обновляем последнюю активность
       existingListener.lastActivity = new Date().toISOString();
