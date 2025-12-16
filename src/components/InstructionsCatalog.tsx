@@ -79,8 +79,8 @@ export default function InstructionsCatalog({
           <p className="text-muted-foreground">Найдите нужную инструкцию или создайте новую</p>
         </div>
         <Button onClick={onGenerateClick} className="bg-gradient-to-r from-blue-600 to-blue-500">
-          <Icon name="Sparkles" className="h-4 w-4 mr-2" />
-          Сгенерировать с ИИ
+          <Icon name="FileText" className="h-4 w-4 mr-2" />
+          Генерация документа
         </Button>
       </div>
 

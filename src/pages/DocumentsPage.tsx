@@ -261,15 +261,15 @@ export default function DocumentsPage({ onBack }: DocumentsPageProps) {
                 <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                   Документы
                 </h1>
-                <p className="text-xs text-muted-foreground">Создание инструкций и программ с помощью ИИ</p>
+                <p className="text-xs text-muted-foreground">Создание инструкций и программ</p>
               </div>
             </div>
             <Button 
               onClick={() => setShowCreateDialog(true)}
               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
             >
-              <Icon name="Sparkles" className="h-4 w-4 mr-2" />
-              Создать документ с ИИ
+              <Icon name="Plus" className="h-4 w-4 mr-2" />
+              Создать документ
             </Button>
           </div>
         </div>
@@ -448,7 +448,7 @@ export default function DocumentsPage({ onBack }: DocumentsPageProps) {
                 <div className="flex items-start gap-3">
                   <Icon name="Info" className="h-5 w-5 text-purple-600 flex-shrink-0 mt-0.5" />
                   <div className="text-sm">
-                    <p className="font-medium text-purple-900 mb-1">Как работает ИИ-генерация</p>
+                    <p className="font-medium text-purple-900 mb-1">Как работает генерация документа</p>
                     <ul className="text-purple-700 space-y-1 list-disc list-inside">
                       <li>Анализирует ваши требования и тип документа</li>
                       <li>Создает структурированный документ по ГОСТ</li>
@@ -481,8 +481,8 @@ export default function DocumentsPage({ onBack }: DocumentsPageProps) {
                 </>
               ) : (
                 <>
-                  <Icon name="Sparkles" className="h-4 w-4 mr-2" />
-                  Создать документ
+                  <Icon name="FileCheck" className="h-4 w-4 mr-2" />
+                  Генерация документа
                 </>
               )}
             </Button>
