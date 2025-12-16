@@ -1,17 +1,23 @@
 import { useState, useEffect } from 'react';
 import AdminAuth from '@/pages/AdminAuth';
 import ListenerAuth from '@/pages/ListenerAuth';
-import AdminDashboard from '@/pages/AdminDashboard';
+import AdminHome from '@/pages/AdminHome';
+import CatalogPage from '@/pages/CatalogPage';
+import ProgramsPage from '@/pages/ProgramsPage';
+import TestingPage from '@/pages/TestingPage';
+import CertificatesPage from '@/pages/CertificatesPage';
+import AnalyticsPage from '@/pages/AnalyticsPage';
 import ListenerDashboard from '@/pages/ListenerDashboard';
 import ListenersManagement from '@/pages/ListenersManagement';
 import ListenerProgramsSetup from '@/pages/ListenerProgramsSetup';
+import AdminManagement from '@/pages/AdminManagement';
 
 type UserRole = 'admin' | 'listener' | null;
 
 interface AdminUser {
   name: string;
   email: string;
-  role: 'ot' | 'pb';
+  role: 'ot' | 'pb' | 'superadmin';
 }
 
 interface ListenerUser {
@@ -24,10 +30,16 @@ interface ListenerUser {
 type CurrentView = 
   | 'admin-auth'
   | 'listener-auth'
-  | 'admin-dashboard'
+  | 'admin-home'
+  | 'catalog'
+  | 'programs'
+  | 'testing'
+  | 'certificates'
+  | 'analytics'
   | 'listener-dashboard'
   | 'listeners-management'
-  | 'listener-programs-setup';
+  | 'listener-programs-setup'
+  | 'admin-management';
 
 function App() {
   const [currentView, setCurrentView] = useState<CurrentView>('admin-auth');
@@ -47,9 +59,14 @@ function App() {
   }, []);
 
   const handleAdminLogin = (email: string, password: string, name: string, role: 'ot' | 'pb') => {
-    setAdminUser({ name, email, role });
+    const isSuperAdmin = email === 'nshrkonstantin@gmail.com';
+    setAdminUser({ 
+      name: isSuperAdmin ? 'Шнюков Константин Анатольевич' : name, 
+      email, 
+      role: isSuperAdmin ? 'superadmin' : role 
+    });
     setUserRole('admin');
-    setCurrentView('admin-dashboard');
+    setCurrentView('admin-home');
   };
 
   const handleListenerLogin = (fullName: string, position: string, department: string, listenerId?: string) => {
@@ -73,8 +90,16 @@ function App() {
     setCurrentView('listeners-management');
   };
 
-  const handleBackToAdminDashboard = () => {
-    setCurrentView('admin-dashboard');
+  const handleBackToAdminHome = () => {
+    setCurrentView('admin-home');
+  };
+
+  const handleNavigateToSection = (section: 'catalog' | 'programs' | 'testing' | 'certificates' | 'analytics' | 'listeners' | 'admin-management') => {
+    if (section === 'listeners') {
+      setCurrentView('listeners-management');
+    } else {
+      setCurrentView(section);
+    }
   };
 
   const handleConfigureListener = (listenerId: string) => {
@@ -99,15 +124,44 @@ function App() {
     );
   }
 
-  if (currentView === 'admin-dashboard' && adminUser) {
+  if (currentView === 'admin-home' && adminUser) {
     return (
-      <AdminDashboard
+      <AdminHome
         user={adminUser}
         onLogout={handleLogout}
-        onSwitchToListener={handleSwitchToListener}
-        onManageListeners={handleManageListeners}
+        onNavigate={handleNavigateToSection}
       />
     );
+  }
+
+  if (currentView === 'catalog' && adminUser) {
+    return <CatalogPage onBack={handleBackToAdminHome} />;
+  }
+
+  if (currentView === 'programs' && adminUser) {
+    return <ProgramsPage onBack={handleBackToAdminHome} />;
+  }
+
+  if (currentView === 'testing' && adminUser) {
+    return (
+      <TestingPage 
+        onBack={handleBackToAdminHome} 
+        userName={adminUser.name}
+        userRole={adminUser.role === 'ot' ? 'Инженер по охране труда' : adminUser.role === 'pb' ? 'Инженер по пожарной безопасности' : 'Главный администратор'}
+      />
+    );
+  }
+
+  if (currentView === 'certificates' && adminUser) {
+    return <CertificatesPage onBack={handleBackToAdminHome} />;
+  }
+
+  if (currentView === 'analytics' && adminUser) {
+    return <AnalyticsPage onBack={handleBackToAdminHome} />;
+  }
+
+  if (currentView === 'admin-management' && adminUser) {
+    return <AdminManagement onBack={handleBackToAdminHome} />;
   }
 
   if (currentView === 'listener-dashboard' && listenerUser) {
@@ -119,10 +173,10 @@ function App() {
     );
   }
 
-  if (currentView === 'listeners-management') {
+  if (currentView === 'listeners-management' && adminUser) {
     return (
       <ListenersManagement
-        onBack={handleBackToAdminDashboard}
+        onBack={handleBackToAdminHome}
         onConfigureListener={handleConfigureListener}
       />
     );
