@@ -35,6 +35,8 @@ interface CertificateTemplate {
   program: string;
   createdDate: string;
   usedCount: number;
+  elements?: CertificateElement[];
+  backgroundImage?: string | null;
 }
 
 interface CertificateElement {
@@ -72,32 +74,63 @@ export default function CertificateBuilder({ onBack }: CertificateBuilderProps) 
     program: '',
   });
 
-  const [templates, setTemplates] = useState<CertificateTemplate[]>([
-    {
-      id: '1',
-      name: 'Сертификат работы на высоте',
-      type: 'certificate',
-      program: 'Работа на высоте',
-      createdDate: '15.11.2024',
-      usedCount: 45,
-    },
-    {
-      id: '2',
-      name: 'Удостоверение электробезопасность',
-      type: 'attestation',
-      program: 'Электробезопасность',
-      createdDate: '10.11.2024',
-      usedCount: 38,
-    },
-    {
-      id: '3',
-      name: 'Диплом ПБ',
-      type: 'diploma',
-      program: 'Пожарная безопасность',
-      createdDate: '05.11.2024',
-      usedCount: 62,
+  const [templates, setTemplates] = useState<CertificateTemplate[]>(() => {
+    const saved = localStorage.getItem('certificate_templates');
+    if (saved) {
+      return JSON.parse(saved);
     }
-  ]);
+    return [
+      {
+        id: '1',
+        name: 'Сертификат работы на высоте',
+        type: 'certificate',
+        program: 'Работа на высоте',
+        createdDate: '15.11.2024',
+        usedCount: 45,
+      },
+      {
+        id: '2',
+        name: 'Удостоверение электробезопасность',
+        type: 'attestation',
+        program: 'Электробезопасность',
+        createdDate: '10.11.2024',
+        usedCount: 38,
+      },
+      {
+        id: '3',
+        name: 'Диплом ПБ',
+        type: 'diploma',
+        program: 'Пожарная безопасность',
+        createdDate: '05.11.2024',
+        usedCount: 62,
+      }
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('certificate_templates', JSON.stringify(templates));
+  }, [templates]);
+
+  useEffect(() => {
+    if (selectedTemplate) {
+      const savedData = localStorage.getItem(`certificate_design_${selectedTemplate.id}`);
+      if (savedData) {
+        const { elements: savedElements, backgroundImage: savedBg } = JSON.parse(savedData);
+        setElements(savedElements || []);
+        setBackgroundImage(savedBg || null);
+      }
+    }
+  }, [selectedTemplate]);
+
+  useEffect(() => {
+    if (selectedTemplate) {
+      const designData = {
+        elements,
+        backgroundImage
+      };
+      localStorage.setItem(`certificate_design_${selectedTemplate.id}`, JSON.stringify(designData));
+    }
+  }, [elements, backgroundImage, selectedTemplate]);
 
   const handleCreateTemplate = () => {
     const template: CertificateTemplate = {
@@ -125,8 +158,6 @@ export default function CertificateBuilder({ onBack }: CertificateBuilderProps) 
   const handleEditTemplate = (template: CertificateTemplate) => {
     setSelectedTemplate(template);
     setActiveTab('builder');
-    setElements([]);
-    setBackgroundImage(null);
   };
 
   const getTypeIcon = (type: string) => {
