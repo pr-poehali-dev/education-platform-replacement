@@ -8,6 +8,8 @@ import Icon from '@/components/ui/icon';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import TestingInterface from '@/components/TestingInterface';
+import { trainingPrograms, getProgramById } from '@/data/trainingPrograms';
+import { getRandomQuestions } from '@/data/testQuestions';
 
 interface TestQuestion {
   id: string;
@@ -46,31 +48,35 @@ export default function ListenerDashboard({ listener, onLogout }: ListenerDashbo
   });
   const [showProtocol, setShowProtocol] = useState(false);
   const [protocolData, setProtocolData] = useState<any>(null);
-
-  const assignedPrograms: any[] = [];
+  const [assignedPrograms, setAssignedPrograms] = useState<any[]>([]);
 
   const certificates: any[] = [];
 
-  const sampleQuestions: TestQuestion[] = [
-    {
-      id: '1',
-      question: 'Какова минимальная высота, с которой работы считаются работами на высоте?',
-      options: ['1 метр', '1.5 метра', '1.8 метра', '2 метра'],
-      correctAnswer: 2
-    },
-    {
-      id: '2',
-      question: 'Как часто должна проводиться проверка средств индивидуальной защиты от падения?',
-      options: ['Раз в месяц', 'Перед каждым использованием', 'Раз в квартал', 'Раз в год'],
-      correctAnswer: 1
-    },
-    {
-      id: '3',
-      question: 'Какой максимальный срок действия наряда-допуска на работы на высоте?',
-      options: ['1 день', '3 дня', '5 дней', '15 дней'],
-      correctAnswer: 3
+  useEffect(() => {
+    if (listener.listenerId) {
+      const saved = localStorage.getItem(`listener_programs_${listener.listenerId}`);
+      if (saved) {
+        const programIds = JSON.parse(saved);
+        const programs = programIds
+          .map((id: string) => getProgramById(id))
+          .filter(Boolean)
+          .map((program: any, index: number) => ({
+            ...program,
+            progress: Math.floor(Math.random() * 100),
+            status: Math.random() > 0.5 ? 'in-progress' : 'not-started',
+            deadline: new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000).toLocaleDateString('ru-RU')
+          }));
+        setAssignedPrograms(programs);
+      }
     }
-  ];
+  }, [listener.listenerId]);
+
+  const sampleQuestions: TestQuestion[] = getRandomQuestions(20).map(q => ({
+    id: q.id,
+    question: q.question,
+    options: q.options,
+    correctAnswer: q.correctAnswer
+  }));
 
   const startTest = (mode: 'practice' | 'exam') => {
     setTestMode(mode);
@@ -349,7 +355,7 @@ export default function ListenerDashboard({ listener, onLogout }: ListenerDashbo
                             </div>
                             <div>
                               <p className="font-medium">{program.title}</p>
-                              <p className="text-sm text-muted-foreground">{program.completedModules}/{program.modules} модулей</p>
+                              <p className="text-sm text-muted-foreground">{program.modules?.length || 0} модулей • {program.totalHours} часов</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-4">
@@ -398,13 +404,21 @@ export default function ListenerDashboard({ listener, onLogout }: ListenerDashbo
                         <div className="space-y-2">
                           <div className="flex justify-between text-sm">
                             <span className="text-muted-foreground">Прогресс</span>
-                            <span className="font-medium">{program.completedModules}/{program.modules} модулей</span>
+                            <span className="font-medium">{program.progress}%</span>
                           </div>
                           <Progress value={program.progress} />
                         </div>
                         <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Модули</span>
+                          <span className="font-medium">{program.modules?.length || 0} модулей</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">Длительность</span>
-                          <span className="font-medium">{program.duration}</span>
+                          <span className="font-medium">{program.totalHours} часов</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Срок сдачи</span>
+                          <span className="font-medium text-orange-600">{program.deadline}</span>
                         </div>
                         <Button 
                           className="w-full mt-4" 

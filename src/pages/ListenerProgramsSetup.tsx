@@ -5,16 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-
-interface Program {
-  id: string;
-  title: string;
-  description: string;
-  duration: string;
-  modules: number;
-  icon: string;
-  color: string;
-}
+import { trainingPrograms, type TrainingProgram } from '@/data/trainingPrograms';
 
 interface ListenerProgramsSetupProps {
   listenerId: string;
@@ -36,62 +27,7 @@ export default function ListenerProgramsSetup({ listenerId, onBack, onSave }: Li
     }
   }, [listenerId]);
 
-  const allPrograms: Program[] = [
-    {
-      id: '1',
-      title: 'Работа на высоте',
-      description: 'Комплексное обучение безопасной работе на высоте',
-      duration: '16 часов',
-      modules: 8,
-      icon: 'Mountain',
-      color: 'from-orange-500 to-red-500'
-    },
-    {
-      id: '2',
-      title: 'Электробезопасность',
-      description: 'Правила работы с электроустановками до и выше 1000В',
-      duration: '24 часа',
-      modules: 12,
-      icon: 'Zap',
-      color: 'from-yellow-500 to-orange-500'
-    },
-    {
-      id: '3',
-      title: 'Пожарная безопасность',
-      description: 'ПТМ для руководителей и ответственных лиц',
-      duration: '12 часов',
-      modules: 6,
-      icon: 'Flame',
-      color: 'from-red-500 to-pink-500'
-    },
-    {
-      id: '4',
-      title: 'Охрана труда для руководителей',
-      description: 'Обучение по программе А для руководителей организаций',
-      duration: '40 часов',
-      modules: 20,
-      icon: 'Briefcase',
-      color: 'from-blue-500 to-indigo-500'
-    },
-    {
-      id: '5',
-      title: 'Оказание первой помощи',
-      description: 'Практические навыки оказания первой помощи пострадавшим',
-      duration: '8 часов',
-      modules: 4,
-      icon: 'Heart',
-      color: 'from-pink-500 to-rose-500'
-    },
-    {
-      id: '6',
-      title: 'Работа с грузоподъемным оборудованием',
-      description: 'Безопасная эксплуатация кранов и подъемников',
-      duration: '20 часов',
-      modules: 10,
-      icon: 'Construction',
-      color: 'from-amber-500 to-orange-500'
-    }
-  ];
+  const allPrograms = trainingPrograms;
 
   const [selectedPrograms, setSelectedPrograms] = useState<string[]>(() => {
     const saved = localStorage.getItem(`listener_programs_${listenerId}`);
@@ -282,11 +218,15 @@ export default function ListenerProgramsSetup({ listenerId, onBack, onSave }: Li
                       <div className="flex gap-6 text-sm">
                         <div className="flex items-center gap-2">
                           <Icon name="Clock" className="h-4 w-4 text-muted-foreground" />
-                          <span>{program.duration}</span>
+                          <span>{program.totalHours} часов</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <Icon name="BookOpen" className="h-4 w-4 text-muted-foreground" />
-                          <span>{program.modules} модулей</span>
+                          <span>{program.modules.length} модулей</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Icon name="Award" className="h-4 w-4 text-muted-foreground" />
+                          <span>{program.category}</span>
                         </div>
                       </div>
                     </CardContent>
