@@ -53,29 +53,69 @@ export default function TestingInterface({
   currentUser
 }: TestingInterfaceProps) {
   if (testSession.status === 'not-started') {
+    if (currentUser.role === 'student') {
+      return (
+        <div className="space-y-6">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 mb-4">
+              <Icon name="ClipboardCheck" className="h-8 w-8 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Блок тестирования</h2>
+            <p className="text-muted-foreground">Назначенные тесты и экзамены</p>
+          </div>
+
+          <Card className="border-2 border-dashed">
+            <CardContent className="pt-12 pb-12 text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+                <Icon name="ClipboardList" className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Нет назначенных тестов</h3>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                У вас пока нет назначенных тестов или экзаменов. Когда администратор назначит вам программу обучения, здесь появятся доступные тесты.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-6">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 mb-4">
-            <Icon name="ClipboardCheck" className="h-8 w-8 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold mb-2">Блок тестирования</h2>
-          <p className="text-muted-foreground">Назначенные тесты и экзамены</p>
+        <div>
+          <h2 className="text-2xl font-bold">Тестирование знаний</h2>
+          <p className="text-muted-foreground">Проверьте свои знания в различных областях охраны труда</p>
         </div>
 
-        <Card className="border-2 border-dashed">
-          <CardContent className="pt-12 pb-12 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-              <Icon name="ClipboardList" className="h-8 w-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-semibold mb-2">Нет назначенных тестов</h3>
-            <p className="text-muted-foreground max-w-md mx-auto">
-              У вас пока нет назначенных тестов или экзаменов. Когда администратор назначит вам программу обучения, здесь появятся доступные тесты.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="grid md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Icon name="BookOpen" className="h-6 w-6 text-blue-500" />
+                <CardTitle>Тренировочный режим</CardTitle>
+              </div>
+              <CardDescription>Неограниченное время, возможность вернуться к вопросам</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 mb-4">
+                <li className="flex items-center gap-2">
+                  <Icon name="Check" className="h-4 w-4 text-green-500" />
+                  <span className="text-sm">Без ограничения времени</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icon name="Check" className="h-4 w-4 text-green-500" />
+                  <span className="text-sm">Можно вернуться к вопросам</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Icon name="Check" className="h-4 w-4 text-green-500" />
+                  <span className="text-sm">Результаты не сохраняются</span>
+                </li>
+              </ul>
+              <Button onClick={() => onStartTest('practice')} className="w-full">
+                Начать тренировку
+              </Button>
+            </CardContent>
+          </Card>
 
-        <div style={{ display: 'none' }}>
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
