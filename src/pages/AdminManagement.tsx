@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -34,26 +34,36 @@ export default function AdminManagement({ onBack }: AdminManagementProps) {
   const [newAdminRole, setNewAdminRole] = useState<'ot' | 'pb'>('ot');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const [admins, setAdmins] = useState<Admin[]>([
-    {
-      id: '1',
-      name: 'Иванова Мария Петровна',
-      email: 'ivanova@company.ru',
-      role: 'ot',
-      status: 'active',
-      addedDate: '15.01.2024',
-      loginToken: 'token_' + Math.random().toString(36).substring(2, 15)
-    },
-    {
-      id: '2',
-      name: 'Петров Сергей Александрович',
-      email: 'petrov@company.ru',
-      role: 'pb',
-      status: 'active',
-      addedDate: '20.02.2024',
-      loginToken: 'token_' + Math.random().toString(36).substring(2, 15)
+  const [admins, setAdmins] = useState<Admin[]>(() => {
+    const saved = localStorage.getItem('admins_list');
+    if (saved) {
+      return JSON.parse(saved);
     }
-  ]);
+    return [
+      {
+        id: '1',
+        name: 'Иванова Мария Петровна',
+        email: 'ivanova@company.ru',
+        role: 'ot',
+        status: 'active',
+        addedDate: '15.01.2024',
+        loginToken: 'token_' + Math.random().toString(36).substring(2, 15)
+      },
+      {
+        id: '2',
+        name: 'Петров Сергей Александрович',
+        email: 'petrov@company.ru',
+        role: 'pb',
+        status: 'active',
+        addedDate: '20.02.2024',
+        loginToken: 'token_' + Math.random().toString(36).substring(2, 15)
+      }
+    ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('admins_list', JSON.stringify(admins));
+  }, [admins]);
 
   const generateLoginUrl = (admin: Admin) => {
     const baseUrl = window.location.origin;
