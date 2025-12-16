@@ -92,6 +92,35 @@ function App() {
   };
 
   const handleListenerLogin = (fullName: string, position: string, department: string, listenerId?: string) => {
+    // Сохраняем слушателя в список, если его там нет
+    const savedListeners = localStorage.getItem('listeners');
+    const listeners = savedListeners ? JSON.parse(savedListeners) : [];
+    
+    // Проверяем, есть ли уже такой слушатель
+    const existingListener = listeners.find((l: { id: string; fullName: string }) => 
+      l.id === listenerId || l.fullName === fullName
+    );
+    
+    if (!existingListener) {
+      const newListener = {
+        id: listenerId || `listener_${Date.now()}`,
+        fullName,
+        position,
+        department,
+        assignedPrograms: [],
+        completedPrograms: 0,
+        totalPrograms: 0,
+        progress: 0,
+        lastActivity: new Date().toISOString()
+      };
+      listeners.push(newListener);
+      localStorage.setItem('listeners', JSON.stringify(listeners));
+    } else {
+      // Обновляем последнюю активность
+      existingListener.lastActivity = new Date().toISOString();
+      localStorage.setItem('listeners', JSON.stringify(listeners));
+    }
+    
     setListenerUser({ fullName, position, department, listenerId });
     setUserRole('listener');
     setCurrentView('listener-dashboard');
