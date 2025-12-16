@@ -38,10 +38,12 @@ export default function ListenersManagement({ onBack, onConfigureListener, onGoT
   const [searchQuery, setSearchQuery] = useState('');
   const [showRegisterDialog, setShowRegisterDialog] = useState(false);
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showBackupDialog, setShowBackupDialog] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [importedCount, setImportedCount] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const backupFileInputRef = useRef<HTMLInputElement>(null);
   const [newListener, setNewListener] = useState({
     fullName: '',
     position: '',
@@ -241,6 +243,84 @@ export default function ListenersManagement({ onBack, onConfigureListener, onGoT
     XLSX.writeFile(workbook, fileName);
   };
 
+  const createBackup = () => {
+    const backupData = {
+      listeners: listeners,
+      version: '1.0',
+      exportDate: new Date().toISOString(),
+      totalListeners: listeners.length
+    };
+
+    const programsData: { [key: string]: string[] } = {};
+    listeners.forEach(listener => {
+      const savedPrograms = localStorage.getItem(`listener_programs_${listener.id}`);
+      if (savedPrograms) {
+        programsData[listener.id] = JSON.parse(savedPrograms);
+      }
+    });
+    
+    const fullBackup = {
+      ...backupData,
+      programs: programsData
+    };
+
+    const blob = new Blob([JSON.stringify(fullBackup, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const currentDate = new Date().toLocaleDateString('ru-RU').replace(/\./g, '_');
+    link.href = url;
+    link.download = `Резервная_копия_${currentDate}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleBackupFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setImportError(null);
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const backupData = JSON.parse(content);
+
+        if (!backupData.listeners || !Array.isArray(backupData.listeners)) {
+          setImportError('Неверный формат файла резервной копии');
+          return;
+        }
+
+        if (window.confirm(`Загрузить ${backupData.totalListeners} слушателей из резервной копии? Текущие данные будут заменены.`)) {
+          setListeners(backupData.listeners);
+          localStorage.setItem('listeners', JSON.stringify(backupData.listeners));
+
+          if (backupData.programs) {
+            Object.keys(backupData.programs).forEach(listenerId => {
+              localStorage.setItem(`listener_programs_${listenerId}`, JSON.stringify(backupData.programs[listenerId]));
+            });
+          }
+
+          setImportedCount(backupData.listeners.length);
+          setTimeout(() => {
+            setShowBackupDialog(false);
+            setImportError(null);
+            setImportedCount(0);
+            if (backupFileInputRef.current) {
+              backupFileInputRef.current.value = '';
+            }
+          }, 2500);
+        }
+      } catch (error) {
+        setImportError('Ошибка при чтении файла резервной копии');
+      }
+    };
+
+    reader.readAsText(file);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <header className="bg-white border-b sticky top-0 z-50 shadow-sm">
@@ -301,6 +381,14 @@ export default function ListenersManagement({ onBack, onConfigureListener, onGoT
               >
                 <Icon name="Upload" className="h-4 w-4 mr-2" />
                 Импорт Excel
+              </Button>
+              <Button 
+                onClick={() => setShowBackupDialog(true)}
+                variant="outline"
+                className="whitespace-nowrap"
+              >
+                <Icon name="Database" className="h-4 w-4 mr-2" />
+                Резервная копия
               </Button>
               <Button 
                 onClick={() => setShowRegisterDialog(true)}
@@ -608,6 +696,176 @@ export default function ListenersManagement({ onBack, onConfigureListener, onGoT
                 setImportedCount(0);
                 if (fileInputRef.current) {
                   fileInputRef.current.value = '';
+                }
+              }}
+            >
+              Закрыть
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showBackupDialog} onOpenChange={setShowBackupDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Icon name="Database" className="h-5 w-5 text-blue-600" />
+              Резервная копия данных
+            </DialogTitle>
+            <DialogDescription>
+              Создание и восстановление резервных копий всех данных системы
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Icon name="Download" className="h-5 w-5 text-blue-600" />
+                  Создать резервную копию
+                </CardTitle>
+                <CardDescription>
+                  Сохраните все данные в защищённый JSON-файл
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-white/50 rounded-lg p-4 space-y-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Слушателей в системе:</span>
+                    <Badge variant="outline" className="font-bold">{listeners.length}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Дата создания копии:</span>
+                    <span className="font-medium">{new Date().toLocaleDateString('ru-RU')}</span>
+                  </div>
+                </div>
+                <div className="space-y-2 text-sm text-blue-900">
+                  <p className="flex items-start gap-2">
+                    <Icon name="CheckCircle" className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <span>Все данные слушателей (ФИО, должности, подразделения)</span>
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <Icon name="CheckCircle" className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <span>Назначенные программы обучения</span>
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <Icon name="CheckCircle" className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <span>Прогресс и статистика обучения</span>
+                  </p>
+                  <p className="flex items-start gap-2">
+                    <Icon name="CheckCircle" className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                    <span>Персональные ссылки для входа</span>
+                  </p>
+                </div>
+                <Button 
+                  onClick={createBackup}
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                  disabled={listeners.length === 0}
+                >
+                  <Icon name="Download" className="h-4 w-4 mr-2" />
+                  Скачать резервную копию
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200">
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Icon name="Upload" className="h-5 w-5 text-green-600" />
+                  Восстановить из резервной копии
+                </CardTitle>
+                <CardDescription>
+                  Загрузите ранее созданный файл резервной копии
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-white/50 rounded-lg p-4 space-y-2">
+                  <div className="flex items-start gap-3">
+                    <Icon name="AlertTriangle" className="h-5 w-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-sm text-orange-900">
+                      <p className="font-medium mb-1">⚠️ Внимание!</p>
+                      <p>Восстановление из резервной копии заменит все текущие данные. Рекомендуется сначала создать резервную копию текущего состояния.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <input
+                    ref={backupFileInputRef}
+                    type="file"
+                    accept=".json"
+                    onChange={handleBackupFileSelect}
+                    className="hidden"
+                    id="backup-file-input"
+                  />
+                  <Label 
+                    htmlFor="backup-file-input"
+                    className="flex items-center justify-center gap-2 w-full px-4 py-3 bg-white border-2 border-dashed border-green-300 rounded-lg cursor-pointer hover:bg-green-50 hover:border-green-400 transition-colors"
+                  >
+                    <Icon name="FileJson" className="h-5 w-5 text-green-600" />
+                    <span className="text-sm font-medium text-green-900">
+                      Выберите файл резервной копии (.json)
+                    </span>
+                  </Label>
+                </div>
+
+                {importError && (
+                  <Card className="bg-red-50 border-red-200">
+                    <CardContent className="pt-4">
+                      <div className="flex items-center gap-2 text-red-900">
+                        <Icon name="AlertCircle" className="h-5 w-5" />
+                        <p className="text-sm">{importError}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {importedCount > 0 && (
+                  <Card className="bg-green-50 border-green-200">
+                    <CardContent className="pt-4">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-green-600 p-2 rounded-lg">
+                          <Icon name="CheckCircle" className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-green-900">{importedCount}</p>
+                          <p className="text-sm text-green-700">слушателей восстановлено из резервной копии</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="bg-amber-50 border-amber-200">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3">
+                  <Icon name="Info" className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-amber-900 space-y-2">
+                    <p className="font-medium">Рекомендации по работе с резервными копиями:</p>
+                    <ul className="space-y-1 ml-4 list-disc">
+                      <li>Создавайте резервные копии регулярно (минимум раз в неделю)</li>
+                      <li>Храните файлы копий в надёжном месте (облако, внешний диск)</li>
+                      <li>Называйте файлы понятно с указанием даты создания</li>
+                      <li>Перед восстановлением убедитесь в правильности выбранного файла</li>
+                      <li>После восстановления проверьте корректность данных</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowBackupDialog(false);
+                setImportError(null);
+                setImportedCount(0);
+                if (backupFileInputRef.current) {
+                  backupFileInputRef.current.value = '';
                 }
               }}
             >
