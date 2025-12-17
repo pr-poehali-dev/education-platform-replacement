@@ -260,10 +260,35 @@ export default function ProgramsPage({ onBack }: ProgramsPageProps) {
                               </ul>
                             </div>
                             {module.videoUrl ? (
-                              <div className="flex items-center gap-2 p-3 bg-purple-50 rounded-lg border border-purple-200">
-                                <Icon name="Video" className="h-4 w-4 text-purple-600" />
-                                <span className="text-sm font-medium text-purple-900">Видеоматериал загружен</span>
-                                <Badge variant="secondary" className="ml-auto text-xs">{module.videoDuration}</Badge>
+                              <div className="space-y-2">
+                                <p className="text-sm font-medium text-muted-foreground">Видеоматериалы:</p>
+                                <div className="relative group overflow-hidden rounded-lg border-2 border-purple-200 hover:border-purple-400 transition-all cursor-pointer">
+                                  <img 
+                                    src={module.videoUrl} 
+                                    alt={module.videoTitle || 'Обучающее видео'}
+                                    className="w-full h-48 object-cover"
+                                  />
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex flex-col justify-end p-4">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <div className="bg-purple-600 p-2 rounded-full group-hover:scale-110 transition-transform">
+                                        <Icon name="Play" className="h-5 w-5 text-white" />
+                                      </div>
+                                      <span className="text-white font-semibold text-sm">
+                                        {module.videoTitle || 'Обучающее видео'}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Badge className="bg-purple-600 hover:bg-purple-700">
+                                        <Icon name="Clock" className="h-3 w-3 mr-1" />
+                                        {module.videoDuration}
+                                      </Badge>
+                                      <Badge variant="secondary" className="bg-white/90">
+                                        <Icon name="Video" className="h-3 w-3 mr-1" />
+                                        HD Качество
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             ) : (
                               <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
