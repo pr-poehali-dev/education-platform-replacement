@@ -9,6 +9,7 @@ import Icon from '@/components/ui/icon';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { getProgramById, type TrainingProgram, type TrainingModule } from '@/data/trainingPrograms';
 import VideoPlayer from '@/components/VideoPlayer';
+import OverallVideoProgress from '@/components/OverallVideoProgress';
 
 interface ModuleLearningProps {
   programId: string;
@@ -288,6 +289,9 @@ export default function ModuleLearning({ programId, listenerId, onBack, onComple
               videoUrl={currentModule.videoUrl}
               videoTitle={currentModule.title}
               videoDuration={currentModule.duration}
+              videoId={`${programId}_module_${currentModule.id}`}
+              employeeId={listenerId}
+              programId={programId}
               initialProgress={currentModuleProgress.videoProgress || 0}
               onProgressUpdate={(videoProgress) => {
                 if (!progress) return;
@@ -296,6 +300,8 @@ export default function ModuleLearning({ programId, listenerId, onBack, onComple
                 saveProgress(updatedProgress);
               }}
             />
+
+            <OverallVideoProgress employeeId={listenerId} programId={programId} />
 
             <Card>
               <CardHeader>

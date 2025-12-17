@@ -5,11 +5,15 @@ import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 import Icon from '@/components/ui/icon';
 import { Badge } from '@/components/ui/badge';
+import { videoProgressService } from '@/services/videoProgressService';
 
 interface VideoPlayerProps {
   videoUrl?: string;
   videoTitle: string;
   videoDuration: string;
+  videoId: string;
+  employeeId: string;
+  programId: string;
   onProgressUpdate?: (progress: number) => void;
   initialProgress?: number;
 }
@@ -18,6 +22,9 @@ export default function VideoPlayer({
   videoUrl, 
   videoTitle, 
   videoDuration,
+  videoId,
+  employeeId,
+  programId,
   onProgressUpdate,
   initialProgress = 0
 }: VideoPlayerProps) {
@@ -29,10 +36,19 @@ export default function VideoPlayer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [playbackRate, setPlaybackRate] = useState(1);
+  const [isCompleted, setIsCompleted] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout>();
+  const progressSaveIntervalRef = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    const savedProgress = videoProgressService.getVideoProgress(employeeId, programId, videoId);
+    if (savedProgress) {
+      setIsCompleted(savedProgress.completed);
+    }
+  }, [employeeId, programId, videoId]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -42,17 +58,33 @@ export default function VideoPlayer({
       setCurrentTime(video.currentTime);
       const progress = (video.currentTime / video.duration) * 100;
       onProgressUpdate?.(progress);
+      
+      if (video.currentTime >= video.duration * 0.9 && !isCompleted) {
+        setIsCompleted(true);
+      }
     };
 
     const handleLoadedMetadata = () => {
       setDuration(video.duration);
-      if (initialProgress > 0 && video.duration > 0) {
+      
+      const savedProgress = videoProgressService.getVideoProgress(employeeId, programId, videoId);
+      if (savedProgress && savedProgress.watchedSeconds > 0) {
+        video.currentTime = savedProgress.watchedSeconds;
+      } else if (initialProgress > 0 && video.duration > 0) {
         video.currentTime = (initialProgress / 100) * video.duration;
       }
     };
 
     const handleEnded = () => {
       setIsPlaying(false);
+      setIsCompleted(true);
+      videoProgressService.updateVideoProgress(
+        employeeId,
+        programId,
+        videoId,
+        video.duration,
+        video.duration
+      );
       onProgressUpdate?.(100);
     };
 
@@ -65,7 +97,7 @@ export default function VideoPlayer({
       video.removeEventListener('loadedmetadata', handleLoadedMetadata);
       video.removeEventListener('ended', handleEnded);
     };
-  }, [initialProgress, onProgressUpdate]);
+  }, [initialProgress, onProgressUpdate, employeeId, programId, videoId, isCompleted]);
 
   const togglePlay = () => {
     const video = videoRef.current;
@@ -73,8 +105,29 @@ export default function VideoPlayer({
 
     if (isPlaying) {
       video.pause();
+      if (progressSaveIntervalRef.current) {
+        clearInterval(progressSaveIntervalRef.current);
+      }
+      videoProgressService.updateVideoProgress(
+        employeeId,
+        programId,
+        videoId,
+        video.currentTime,
+        video.duration
+      );
     } else {
       video.play();
+      progressSaveIntervalRef.current = setInterval(() => {
+        if (video.duration > 0) {
+          videoProgressService.updateVideoProgress(
+            employeeId,
+            programId,
+            videoId,
+            video.currentTime,
+            video.duration
+          );
+        }
+      }, 5000);
     }
     setIsPlaying(!isPlaying);
   };
@@ -225,9 +278,17 @@ export default function VideoPlayer({
                 <h3 className="text-white font-semibold text-lg">{videoTitle}</h3>
                 <p className="text-white/80 text-sm">{videoDuration}</p>
               </div>
-              <Badge className="bg-purple-600">
-                {playbackRate}x
-              </Badge>
+              <div className="flex gap-2">
+                {isCompleted && (
+                  <Badge className="bg-green-600">
+                    <Icon name="CheckCircle2" className="h-3 w-3 mr-1" />
+                    Просмотрено
+                  </Badge>
+                )}
+                <Badge className="bg-purple-600">
+                  {playbackRate}x
+                </Badge>
+              </div>
             </div>
 
             {!isPlaying && (
