@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import AssignTraining from '@/components/AssignTraining';
 import VideoUploader from '@/components/VideoUploader';
+import VideoPlayer from '@/components/VideoPlayer';
 import { trainingPrograms, type TrainingProgram } from '@/data/trainingPrograms';
 import {
   Dialog,
@@ -335,39 +336,50 @@ export default function ProgramsPage({ onBack }: ProgramsPageProps) {
       </Dialog>
 
       <Dialog open={videoDialog} onOpenChange={setVideoDialog}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden">
+        <DialogContent className="max-w-6xl p-0 overflow-hidden">
           {currentVideo && (
-            <>
-              <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-6 text-white">
-                <DialogHeader>
-                  <DialogTitle className="text-2xl flex items-center gap-3">
-                    <Icon name="Play" className="h-6 w-6" />
-                    {currentVideo.title}
-                  </DialogTitle>
-                  <DialogDescription className="text-purple-100 flex items-center gap-4 mt-2">
-                    <span className="flex items-center gap-1">
-                      <Icon name="Clock" className="h-4 w-4" />
-                      Длительность: {currentVideo.duration}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Icon name="Video" className="h-4 w-4" />
-                      HD Качество
-                    </span>
-                  </DialogDescription>
-                </DialogHeader>
+            <div className="bg-gradient-to-br from-slate-50 to-purple-50 p-6">
+              <VideoPlayer
+                videoUrl="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                videoTitle={currentVideo.title}
+                videoDuration={currentVideo.duration}
+              />
+              <div className="mt-6 space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-xl mb-2">{currentVideo.title}</h4>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Обучающий видеоматериал по программе "Работа на высоте". 
+                      Включает теоретическую часть и практические демонстрации с отработкой навыков безопасной работы.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="outline" className="flex items-center gap-1">
+                        <Icon name="MonitorPlay" className="h-3 w-3" />
+                        Полноэкранный режим
+                      </Badge>
+                      <Badge variant="outline" className="flex items-center gap-1">
+                        <Icon name="Volume2" className="h-3 w-3" />
+                        Регулировка звука
+                      </Badge>
+                      <Badge variant="outline" className="flex items-center gap-1">
+                        <Icon name="Gauge" className="h-3 w-3" />
+                        Скорость воспроизведения
+                      </Badge>
+                      <Badge variant="outline" className="flex items-center gap-1">
+                        <Icon name="SkipForward" className="h-3 w-3" />
+                        Перемотка ±10 сек
+                      </Badge>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="bg-purple-100 rounded-lg p-4 min-w-[120px]">
+                      <div className="text-3xl font-bold text-purple-600">{currentVideo.duration}</div>
+                      <div className="text-xs text-muted-foreground mt-1">Длительность</div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="aspect-video bg-black">
-                <img 
-                  src={currentVideo.url}
-                  alt={currentVideo.title}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <div className="p-4 bg-gray-50 text-center text-sm text-muted-foreground">
-                <Icon name="Info" className="h-4 w-4 inline mr-2" />
-                Видеоплеер находится в разработке. Сейчас отображается превью видео.
-              </div>
-            </>
+            </div>
           )}
         </DialogContent>
       </Dialog>
