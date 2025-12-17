@@ -176,15 +176,50 @@ export default function ProgramsPage({ onBack }: ProgramsPageProps) {
                       <Icon name="FileText" className="h-4 w-4" />
                       Нормативная база
                     </CardTitle>
+                    <CardDescription>Кликните по документу для открытия или скачивания</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <ul className="space-y-2">
-                      {selectedProgram.legislativeBase.map((doc, idx) => (
-                        <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
-                          <Icon name="Scale" className="h-4 w-4 mt-0.5" />
-                          <span>{doc}</span>
-                        </li>
-                      ))}
+                    <ul className="space-y-3">
+                      {selectedProgram.legislativeDocuments && selectedProgram.legislativeDocuments.length > 0 ? (
+                        selectedProgram.legislativeDocuments.map((doc, idx) => (
+                          <li key={idx}>
+                            <a 
+                              href={doc.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="flex items-start gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-400 hover:bg-blue-50 transition-all group"
+                            >
+                              <div className="bg-blue-100 p-2 rounded-lg group-hover:bg-blue-200 transition-colors">
+                                <Icon name="FileText" className="h-5 w-5 text-blue-600" />
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-gray-900 group-hover:text-blue-700">
+                                  {doc.title}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Badge variant="outline" className="text-xs">
+                                    {doc.type === 'prikas' && 'Приказ'}
+                                    {doc.type === 'postanovlenie' && 'Постановление'}
+                                    {doc.type === 'kodeks' && 'Кодекс'}
+                                    {doc.type === 'pravila' && 'Правила'}
+                                  </Badge>
+                                  <span className="text-xs text-blue-600 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Icon name="ExternalLink" className="h-3 w-3" />
+                                    Открыть документ
+                                  </span>
+                                </div>
+                              </div>
+                            </a>
+                          </li>
+                        ))
+                      ) : (
+                        selectedProgram.legislativeBase.map((doc, idx) => (
+                          <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
+                            <Icon name="Scale" className="h-4 w-4 mt-0.5" />
+                            <span>{doc}</span>
+                          </li>
+                        ))
+                      )}
                     </ul>
                   </CardContent>
                 </Card>
