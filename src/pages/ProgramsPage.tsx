@@ -24,6 +24,13 @@ export default function ProgramsPage({ onBack }: ProgramsPageProps) {
   const [assignTrainingDialog, setAssignTrainingDialog] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<TrainingProgram | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [videoDialog, setVideoDialog] = useState(false);
+  const [currentVideo, setCurrentVideo] = useState<{url: string, title: string, duration: string} | null>(null);
+
+  const handleVideoClick = (videoUrl: string, videoTitle: string, videoDuration: string) => {
+    setCurrentVideo({url: videoUrl, title: videoTitle, duration: videoDuration});
+    setVideoDialog(true);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50">
@@ -262,7 +269,10 @@ export default function ProgramsPage({ onBack }: ProgramsPageProps) {
                             {module.videoUrl ? (
                               <div className="space-y-2">
                                 <p className="text-sm font-medium text-muted-foreground">Видеоматериалы:</p>
-                                <div className="relative group overflow-hidden rounded-lg border-2 border-purple-200 hover:border-purple-400 transition-all cursor-pointer">
+                                <div 
+                                  onClick={() => handleVideoClick(module.videoUrl!, module.videoTitle!, module.videoDuration!)}
+                                  className="relative group overflow-hidden rounded-lg border-2 border-purple-200 hover:border-purple-400 transition-all cursor-pointer"
+                                >
                                   <img 
                                     src={module.videoUrl} 
                                     alt={module.videoTitle || 'Обучающее видео'}
@@ -320,6 +330,44 @@ export default function ProgramsPage({ onBack }: ProgramsPageProps) {
                 </Card>
               </div>
             </ScrollArea>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={videoDialog} onOpenChange={setVideoDialog}>
+        <DialogContent className="max-w-4xl p-0 overflow-hidden">
+          {currentVideo && (
+            <>
+              <div className="bg-gradient-to-r from-purple-600 to-purple-800 p-6 text-white">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl flex items-center gap-3">
+                    <Icon name="Play" className="h-6 w-6" />
+                    {currentVideo.title}
+                  </DialogTitle>
+                  <DialogDescription className="text-purple-100 flex items-center gap-4 mt-2">
+                    <span className="flex items-center gap-1">
+                      <Icon name="Clock" className="h-4 w-4" />
+                      Длительность: {currentVideo.duration}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Icon name="Video" className="h-4 w-4" />
+                      HD Качество
+                    </span>
+                  </DialogDescription>
+                </DialogHeader>
+              </div>
+              <div className="aspect-video bg-black">
+                <img 
+                  src={currentVideo.url}
+                  alt={currentVideo.title}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <div className="p-4 bg-gray-50 text-center text-sm text-muted-foreground">
+                <Icon name="Info" className="h-4 w-4 inline mr-2" />
+                Видеоплеер находится в разработке. Сейчас отображается превью видео.
+              </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
