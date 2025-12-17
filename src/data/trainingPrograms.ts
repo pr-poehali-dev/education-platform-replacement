@@ -83,7 +83,7 @@ export const trainingPrograms: TrainingProgram[] = [
         title: 'Нормативные требования к организации работ на высоте',
         duration: '4 часа',
         description: 'Изучение законодательной базы и требований безопасности при выполнении работ на высоте. Основополагающие нормативные документы, регламентирующие порядок организации и проведения работ на высоте в Российской Федерации.',
-        videoUrl: 'https://cdn.poehali.dev/projects/32d18763-e750-458c-bb3c-6faa05a6a29f/files/0a871129-db3b-445f-8263-067e4d0eb12c.jpg',
+        videoUrl: 'https://cdn.poehali.dev/projects/32d18763-e750-458c-bb3c-6faa05a6a29f/files/f3337219-1353-4407-be29-e10c9ad36282.jpg',
         videoTitle: 'Нормативные требования и законодательная база',
         videoDuration: '45 мин',
         topics: [
@@ -102,7 +102,7 @@ export const trainingPrograms: TrainingProgram[] = [
         title: 'Опасные факторы высотных работ и меры безопасности',
         duration: '6 часов',
         description: 'Комплексный анализ опасных и вредных производственных факторов при выполнении работ на высоте. Изучение методов оценки рисков и разработки мероприятий по обеспечению безопасности работников.',
-        videoUrl: 'https://cdn.poehali.dev/projects/32d18763-e750-458c-bb3c-6faa05a6a29f/files/61185739-88c0-405b-b67b-a85c68d3c45d.jpg',
+        videoUrl: 'https://cdn.poehali.dev/projects/32d18763-e750-458c-bb3c-6faa05a6a29f/files/4b234bc2-56e2-427e-b50a-6e6425ad50c8.jpg',
         videoTitle: 'Идентификация опасностей и управление рисками',
         videoDuration: '52 мин',
         topics: [
@@ -120,7 +120,7 @@ export const trainingPrograms: TrainingProgram[] = [
         title: 'Средства индивидуальной и коллективной защиты',
         duration: '8 часов',
         description: 'Детальное изучение всех типов средств индивидуальной и коллективной защиты от падения с высоты. Правила выбора, эксплуатации, осмотра, испытания и хранения СИЗ в соответствии с требованиями технических регламентов.',
-        videoUrl: 'https://cdn.poehali.dev/projects/32d18763-e750-458c-bb3c-6faa05a6a29f/files/a7b5c7f8-686a-49a7-a7d3-d481e9fb4bcf.jpg',
+        videoUrl: 'https://cdn.poehali.dev/projects/32d18763-e750-458c-bb3c-6faa05a6a29f/files/2e71a26f-4c5d-4e65-adfe-5960a6825e1e.jpg',
         videoTitle: 'Обзор СИЗ: выбор, проверка и правильное использование',
         videoDuration: '1 ч 15 мин',
         topics: [
@@ -143,7 +143,7 @@ export const trainingPrograms: TrainingProgram[] = [
         title: 'Системы канатного доступа',
         duration: '6 часов',
         description: 'Специализированные методы и технологии промышленного альпинизма для выполнения работ на высоте в труднодоступных местах. Изучение оборудования, приемов и техники безопасной работы на канатах.',
-        videoUrl: 'https://cdn.poehali.dev/projects/32d18763-e750-458c-bb3c-6faa05a6a29f/files/f6c93d8a-15d7-4d2d-8d5a-0b29fdee7318.jpg',
+        videoUrl: 'https://cdn.poehali.dev/projects/32d18763-e750-458c-bb3c-6faa05a6a29f/files/7fffa665-0ab6-45b9-beaa-46413e1182f2.jpg',
         videoTitle: 'Техника промышленного альпинизма и канатного доступа',
         videoDuration: '58 мин',
         topics: [
@@ -164,7 +164,7 @@ export const trainingPrograms: TrainingProgram[] = [
         title: 'Действия в аварийных ситуациях',
         duration: '6 часов',
         description: 'Алгоритмы действий работников при возникновении нештатных и аварийных ситуаций на высоте. Приемы самоспасения и спасения пострадавших, взаимодействие с профессиональными аварийно-спасательными службами.',
-        videoUrl: 'https://cdn.poehali.dev/projects/32d18763-e750-458c-bb3c-6faa05a6a29f/files/40ccc531-4256-4273-92e3-1805876b2253.jpg',
+        videoUrl: 'https://cdn.poehali.dev/projects/32d18763-e750-458c-bb3c-6faa05a6a29f/files/5966f150-a93b-4654-bfcc-6d0fd37a001e.jpg',
         videoTitle: 'Спасательные операции и эвакуация с высоты',
         videoDuration: '1 ч 5 мин',
         topics: [
@@ -185,7 +185,7 @@ export const trainingPrograms: TrainingProgram[] = [
         title: 'Оказание первой помощи пострадавшим',
         duration: '8 часов',
         description: 'Обучение навыкам оказания первой помощи пострадавшим при несчастных случаях на высоте до прибытия медицинских работников. Практическая отработка приемов на тренажерах и манекенах в соответствии с современными протоколами.',
-        videoUrl: 'https://cdn.poehali.dev/projects/32d18763-e750-458c-bb3c-6faa05a6a29f/files/8105f548-72e6-42de-858f-479ac8f51f4c.jpg',
+        videoUrl: 'https://cdn.poehali.dev/projects/32d18763-e750-458c-bb3c-6faa05a6a29f/files/8e1bf623-723c-43e8-84ba-bbba8aff1812.jpg',
         videoTitle: 'Первая помощь при травмах и неотложных состояниях',
         videoDuration: '1 ч 20 мин',
         topics: [
@@ -209,7 +209,7 @@ export const trainingPrograms: TrainingProgram[] = [
         title: 'Практические занятия на полигоне',
         duration: '12 часов',
         description: 'Отработка практических навыков безопасной работы на высоте в условиях, максимально приближенных к реальным производственным. Работа на специально оборудованном тренировочном полигоне под руководством инструкторов.',
-        videoUrl: 'https://cdn.poehali.dev/projects/32d18763-e750-458c-bb3c-6faa05a6a29f/files/26065c82-feb3-41bd-bda4-b9b83f8a0fe2.jpg',
+        videoUrl: 'https://cdn.poehali.dev/projects/32d18763-e750-458c-bb3c-6faa05a6a29f/files/927ff090-ae95-4f06-b69a-451c9de85f43.jpg',
         videoTitle: 'Практическая отработка навыков на учебном полигоне',
         videoDuration: '1 ч 40 мин',
         topics: [
@@ -233,7 +233,7 @@ export const trainingPrograms: TrainingProgram[] = [
         title: 'Итоговая аттестация',
         duration: '4 часа',
         description: 'Комплексная проверка теоретических знаний и практических навыков работников по программе обучения безопасным методам и приемам выполнения работ на высоте. По результатам аттестации выдается удостоверение установленного образца.',
-        videoUrl: 'https://cdn.poehali.dev/projects/32d18763-e750-458c-bb3c-6faa05a6a29f/files/ec48af16-403a-4865-90ea-eae901eebbc9.jpg',
+        videoUrl: 'https://cdn.poehali.dev/projects/32d18763-e750-458c-bb3c-6faa05a6a29f/files/ad55cdfa-3785-4ea1-bd3d-e6a070de25e9.jpg',
         videoTitle: 'Процедура аттестации и получение удостоверения',
         videoDuration: '35 мин',
         topics: [
