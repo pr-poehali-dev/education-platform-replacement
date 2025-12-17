@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import AdminVideoProgressReport from '@/components/AdminVideoProgressReport';
 
 interface AnalyticsPageProps {
   onBack: () => void;
@@ -449,6 +450,10 @@ export default function AnalyticsPage({ onBack }: AnalyticsPageProps) {
             </CardContent>
           </Card>
         )}
+
+        <div className="mt-8">
+          <AdminVideoProgressReport />
+        </div>
       </main>
     </div>
   );
