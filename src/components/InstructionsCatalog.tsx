@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Document, Paragraph, Packer, TextRun, HeadingLevel, AlignmentType } from 'docx';
+import { saveAs } from 'file-saver';
 
 interface Instruction {
   id: string;
@@ -69,6 +71,126 @@ export default function InstructionsCatalog({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDownloadWord = async () => {
+    if (!selectedInstruction) return;
+
+    try {
+      const contentLines = (selectedInstruction.content || '').split('\n').filter(line => line.trim());
+      
+      const paragraphs: Paragraph[] = [
+        new Paragraph({
+          text: selectedInstruction.title,
+          heading: HeadingLevel.HEADING_1,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 400 }
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `${selectedInstruction.profession} • ${selectedInstruction.industry}`,
+              italics: true
+            })
+          ],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 600 }
+        }),
+        ...contentLines.map(line => {
+          if (line.match(/^\d+\./)) {
+            return new Paragraph({
+              text: line,
+              heading: HeadingLevel.HEADING_2,
+              spacing: { before: 300, after: 200 }
+            });
+          }
+          return new Paragraph({
+            text: line,
+            spacing: { after: 150 }
+          });
+        })
+      ];
+
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: paragraphs
+        }]
+      });
+
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `${selectedInstruction.title}.docx`);
+    } catch (error) {
+      console.error('Failed to generate Word document:', error);
+      alert('Не удалось создать документ Word');
+    }
+  };
+
+  const handlePrint = () => {
+    if (!selectedInstruction) return;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const contentLines = (selectedInstruction.content || '').split('\n');
+    const formattedContent = contentLines.map(line => {
+      if (line.match(/^\d+\./)) {
+        return `<h2 style="margin-top: 20px; margin-bottom: 10px;">${line}</h2>`;
+      }
+      return `<p style="margin-bottom: 10px;">${line}</p>`;
+    }).join('');
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${selectedInstruction.title}</title>
+          <meta charset="utf-8">
+          <style>
+            body {
+              font-family: 'Times New Roman', serif;
+              line-height: 1.6;
+              max-width: 800px;
+              margin: 40px auto;
+              padding: 20px;
+            }
+            h1 {
+              text-align: center;
+              margin-bottom: 20px;
+            }
+            .subtitle {
+              text-align: center;
+              font-style: italic;
+              color: #666;
+              margin-bottom: 40px;
+            }
+            h2 {
+              margin-top: 20px;
+              margin-bottom: 10px;
+            }
+            p {
+              margin-bottom: 10px;
+            }
+            @media print {
+              body {
+                margin: 0;
+                padding: 20px;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>${selectedInstruction.title}</h1>
+          <div class="subtitle">${selectedInstruction.profession} • ${selectedInstruction.industry}</div>
+          ${formattedContent}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
   };
 
   return (
@@ -173,25 +295,15 @@ export default function InstructionsCatalog({
                 <Button 
                   variant="outline" 
                   className="flex-1"
-                  onClick={() => {
-                    const blob = new Blob([selectedInstruction.content || ''], { type: 'text/plain' });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `${selectedInstruction.title}.txt`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-                  }}
+                  onClick={handleDownloadWord}
                 >
                   <Icon name="Download" className="h-4 w-4 mr-2" />
-                  Скачать TXT
+                  Скачать Word
                 </Button>
                 <Button 
                   variant="outline" 
                   className="flex-1"
-                  onClick={() => window.print()}
+                  onClick={handlePrint}
                 >
                   <Icon name="Printer" className="h-4 w-4 mr-2" />
                   Печать
