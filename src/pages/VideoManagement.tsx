@@ -28,11 +28,24 @@ export default function VideoManagement({ onBack }: VideoManagementProps) {
   const [selectedProgram, setSelectedProgram] = useState(trainingPrograms[0]);
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [selectedModuleId, setSelectedModuleId] = useState<number | null>(null);
+  const [customVideos, setCustomVideos] = useState<Record<string, string>>(() => {
+    const saved = localStorage.getItem('custom_videos');
+    return saved ? JSON.parse(saved) : {};
+  });
 
   const handleVideoUploaded = (videoUrl: string, videoTitle: string, videoDuration: string) => {
-    console.log('Video uploaded:', { videoUrl, videoTitle, videoDuration });
+    const key = `${selectedProgram.id}_${selectedModuleId}`;
+    const updatedVideos = { ...customVideos, [key]: videoUrl };
+    setCustomVideos(updatedVideos);
+    localStorage.setItem('custom_videos', JSON.stringify(updatedVideos));
+    
     setUploadDialogOpen(false);
     setSelectedModuleId(null);
+  };
+  
+  const getModuleVideoUrl = (programId: string, moduleId: number, defaultUrl?: string) => {
+    const key = `${programId}_${moduleId}`;
+    return customVideos[key] || defaultUrl;
   };
 
   const totalVideos = trainingPrograms.reduce(
@@ -153,7 +166,9 @@ export default function VideoManagement({ onBack }: VideoManagementProps) {
 
                     <div className="grid gap-4">
                       {program.modules.map((module) => {
-                        const hasVideo = !!module.videoUrl;
+                        const videoUrl = getModuleVideoUrl(program.id, module.id, module.videoUrl);
+                        const hasVideo = !!videoUrl;
+                        const isCustomVideo = !!customVideos[`${program.id}_${module.id}`];
                         
                         return (
                           <Card key={module.id} className={hasVideo ? 'border-2 border-purple-200' : ''}>
@@ -170,10 +185,17 @@ export default function VideoManagement({ onBack }: VideoManagementProps) {
                                       <Badge variant="secondary">{module.duration}</Badge>
                                       <Badge variant="outline">{module.topics.length} тем</Badge>
                                       {hasVideo ? (
-                                        <Badge className="bg-purple-600">
-                                          <Icon name="Video" className="h-3 w-3 mr-1" />
-                                          Видео загружено
-                                        </Badge>
+                                        isCustomVideo ? (
+                                          <Badge className="bg-green-600">
+                                            <Icon name="Upload" className="h-3 w-3 mr-1" />
+                                            Своё видео
+                                          </Badge>
+                                        ) : (
+                                          <Badge className="bg-purple-600">
+                                            <Icon name="Video" className="h-3 w-3 mr-1" />
+                                            Видео загружено
+                                          </Badge>
+                                        )
                                       ) : (
                                         <Badge variant="outline" className="text-orange-600 border-orange-300">
                                           <Icon name="VideoOff" className="h-3 w-3 mr-1" />
@@ -183,18 +205,35 @@ export default function VideoManagement({ onBack }: VideoManagementProps) {
                                     </div>
                                   </div>
                                 </div>
-                                <Button
-                                  variant={hasVideo ? "outline" : "default"}
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedModuleId(module.id);
-                                    setUploadDialogOpen(true);
-                                  }}
-                                  className={hasVideo ? '' : 'bg-purple-600 hover:bg-purple-700'}
-                                >
-                                  <Icon name={hasVideo ? "RefreshCw" : "Upload"} className="h-4 w-4 mr-2" />
-                                  {hasVideo ? 'Заменить' : 'Загрузить'}
-                                </Button>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant={hasVideo ? "outline" : "default"}
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedModuleId(module.id);
+                                      setUploadDialogOpen(true);
+                                    }}
+                                    className={hasVideo ? '' : 'bg-purple-600 hover:bg-purple-700'}
+                                  >
+                                    <Icon name={hasVideo ? "RefreshCw" : "Upload"} className="h-4 w-4 mr-2" />
+                                    {hasVideo ? 'Заменить' : 'Загрузить'}
+                                  </Button>
+                                  {isCustomVideo && (
+                                    <Button
+                                      variant="destructive"
+                                      size="sm"
+                                      onClick={() => {
+                                        const key = `${program.id}_${module.id}`;
+                                        const updated = { ...customVideos };
+                                        delete updated[key];
+                                        setCustomVideos(updated);
+                                        localStorage.setItem('custom_videos', JSON.stringify(updated));
+                                      }}
+                                    >
+                                      <Icon name="Trash2" className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             </CardHeader>
                             {hasVideo && module.videoUrl && (

@@ -10,6 +10,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { getProgramById, type TrainingProgram, type TrainingModule } from '@/data/trainingPrograms';
 import VideoPlayer from '@/components/VideoPlayer';
 import OverallVideoProgress from '@/components/OverallVideoProgress';
+import { videoService } from '@/services/videoService';
 
 interface ModuleLearningProps {
   programId: string;
@@ -286,7 +287,7 @@ export default function ModuleLearning({ programId, listenerId, onBack, onComple
             </Card>
 
             <VideoPlayer
-              videoUrl={currentModule.videoUrl}
+              videoUrl={videoService.getCustomVideo(programId, currentModule.id) || currentModule.videoUrl}
               videoTitle={currentModule.title}
               videoDuration={currentModule.duration}
               videoId={`${programId}_module_${currentModule.id}`}

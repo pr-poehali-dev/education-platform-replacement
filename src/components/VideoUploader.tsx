@@ -55,25 +55,52 @@ export default function VideoUploader({ programId, moduleId, onVideoUploaded }: 
   };
 
   const uploadToS3 = async (file: File): Promise<string> => {
-    const AWS_ACCESS_KEY_ID = import.meta.env.VITE_AWS_ACCESS_KEY_ID || 'demo-key';
-    const fileKey = `videos/${programId}/${moduleId}/${Date.now()}-${file.name}`;
-    
-    const cdnUrl = `https://cdn.poehali.dev/projects/${AWS_ACCESS_KEY_ID}/bucket/${fileKey}`;
-    
-    return new Promise((resolve) => {
-      const totalSize = file.size;
-      let uploadedSize = 0;
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
       
-      const simulateUpload = setInterval(() => {
-        uploadedSize += totalSize * 0.1;
-        const progress = Math.min((uploadedSize / totalSize) * 100, 100);
-        setUploadProgress(progress);
-        
-        if (progress >= 100) {
-          clearInterval(simulateUpload);
-          setTimeout(() => resolve(cdnUrl), 500);
+      reader.onload = async () => {
+        try {
+          const base64Data = (reader.result as string).split(',')[1];
+          
+          const response = await fetch('https://functions.poehali.dev/89c05d23-56e5-4878-b517-08f8ae6a8422', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Program-Id': programId,
+              'X-Module-Id': moduleId.toString(),
+            },
+            body: JSON.stringify({
+              videoData: base64Data,
+              filename: file.name
+            })
+          });
+          
+          if (!response.ok) {
+            throw new Error('Upload failed');
+          }
+          
+          const result = await response.json();
+          
+          if (result.success && result.url) {
+            resolve(result.url);
+          } else {
+            reject(new Error(result.error || 'Upload failed'));
+          }
+        } catch (error) {
+          reject(error);
         }
-      }, 300);
+      };
+      
+      reader.onerror = () => reject(new Error('File read failed'));
+      
+      reader.onprogress = (e) => {
+        if (e.lengthComputable) {
+          const progress = (e.loaded / e.total) * 100;
+          setUploadProgress(progress);
+        }
+      };
+      
+      reader.readAsDataURL(file);
     });
   };
 
