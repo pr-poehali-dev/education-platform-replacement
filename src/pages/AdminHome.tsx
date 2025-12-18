@@ -17,7 +17,7 @@ interface AdminHomeProps {
     role: 'ot' | 'pb' | 'superadmin';
   };
   onLogout: () => void;
-  onNavigate: (section: 'catalog' | 'programs' | 'testing' | 'certificates' | 'documents' | 'analytics' | 'listeners' | 'admin-management' | 'video-management') => void;
+  onNavigate: (section: 'catalog' | 'programs' | 'testing' | 'certificates' | 'documents' | 'analytics' | 'listeners' | 'admin-management' | 'video-management' | 'tests-catalog') => void;
 }
 
 export default function AdminHome({ user, onLogout, onNavigate }: AdminHomeProps) {
@@ -111,6 +111,14 @@ export default function AdminHome({ user, onLogout, onNavigate }: AdminHomeProps
       description: 'Создание и проведение тестов и экзаменов',
       icon: 'ClipboardCheck',
       color: 'from-purple-500 to-pink-500',
+      stats: '0 тестов'
+    },
+    {
+      id: 'tests-catalog',
+      title: 'Каталог тестов',
+      description: 'Разработка и управление тестами по направлениям',
+      icon: 'BookCheck',
+      color: 'from-pink-500 to-rose-500',
       stats: '0 тестов'
     },
     {

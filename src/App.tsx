@@ -17,6 +17,7 @@ import ModuleLearning from '@/pages/ModuleLearning';
 import VideoManagement from '@/pages/VideoManagement';
 import VideoLibrary from '@/pages/VideoLibrary';
 import VideoPlayerPage from '@/pages/VideoPlayer';
+import TestsCatalogPage from '@/pages/TestsCatalogPage';
 
 type UserRole = 'admin' | 'listener' | null;
 
@@ -51,7 +52,8 @@ type CurrentView =
   | 'module-learning'
   | 'video-management'
   | 'video-library'
-  | 'video-player';
+  | 'video-player'
+  | 'tests-catalog';
 
 function App() {
   const [currentView, setCurrentView] = useState<CurrentView>('admin-auth');
@@ -172,7 +174,7 @@ function App() {
     setCurrentView('admin-home');
   };
 
-  const handleNavigateToSection = (section: 'catalog' | 'programs' | 'testing' | 'certificates' | 'documents' | 'analytics' | 'listeners' | 'admin-management' | 'video-management') => {
+  const handleNavigateToSection = (section: 'catalog' | 'programs' | 'testing' | 'certificates' | 'documents' | 'analytics' | 'listeners' | 'admin-management' | 'video-management' | 'tests-catalog') => {
     if (section === 'listeners') {
       setCurrentView('listeners-management');
     } else if (section === 'video-management') {
@@ -360,6 +362,10 @@ function App() {
         }}
       />
     );
+  }
+
+  if (currentView === 'tests-catalog' && adminUser) {
+    return <TestsCatalogPage onBack={handleBackToAdminHome} />;
   }
 
   return <AdminAuth onLogin={handleAdminLogin} />;
