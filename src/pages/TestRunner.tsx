@@ -70,6 +70,7 @@ export default function TestRunner({ onBack, testId }: TestRunnerProps) {
   const [result, setResult] = useState<TestResult | null>(null);
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [timerEnabled, setTimerEnabled] = useState(true);
+  const [showProtocol, setShowProtocol] = useState(false);
 
   useEffect(() => {
     loadTest();
@@ -208,6 +209,13 @@ export default function TestRunner({ onBack, testId }: TestRunnerProps) {
     const secs = seconds % 60;
     if (minutes === 0) return `${secs} сек`;
     return `${minutes} мин ${secs} сек`;
+  };
+
+  const handlePrintProtocol = () => {
+    setShowProtocol(true);
+    setTimeout(() => {
+      window.print();
+    }, 100);
   };
 
   if (!test) {
@@ -436,29 +444,152 @@ export default function TestRunner({ onBack, testId }: TestRunnerProps) {
               </div>
 
               <div className="flex gap-2">
-                <Button onClick={onBack} className="flex-1">
-                  <Icon name="Home" className="h-4 w-4 mr-2" />
-                  На главную
+                <Button onClick={onBack} variant="outline" className="flex-1">
+                  <Icon name="ArrowLeft" className="h-4 w-4 mr-2" />
+                  Вернуться
                 </Button>
                 <Button 
-                  onClick={() => {
-                    setIsStarted(false);
-                    setIsFinished(false);
-                    setUserAnswers(new Map());
-                    setCurrentQuestionIndex(0);
-                    setTimeRemaining(test.duration * 60);
-                    setResult(null);
-                  }}
-                  variant="outline"
-                  className="flex-1"
+                  onClick={handlePrintProtocol}
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-500"
                 >
-                  <Icon name="RotateCcw" className="h-4 w-4 mr-2" />
-                  Пройти заново
+                  <Icon name="Printer" className="h-4 w-4 mr-2" />
+                  Распечатать протокол
                 </Button>
               </div>
             </CardContent>
           </Card>
         </main>
+      </div>
+    );
+  }
+
+  if (showProtocol && result) {
+    return (
+      <div className="min-h-screen bg-white p-8 print:p-0">
+        <style>
+          {`
+            @media print {
+              body { margin: 0; padding: 20mm; }
+              @page { size: A4; margin: 0; }
+              .no-print { display: none !important; }
+              .print-container { page-break-inside: avoid; }
+            }
+          `}
+        </style>
+        
+        <div className="max-w-4xl mx-auto print-container">
+          <div className="no-print mb-4 flex justify-end gap-2">
+            <Button onClick={() => setShowProtocol(false)} variant="outline">
+              <Icon name="X" className="h-4 w-4 mr-2" />
+              Закрыть
+            </Button>
+            <Button onClick={() => window.print()} className="bg-blue-600">
+              <Icon name="Printer" className="h-4 w-4 mr-2" />
+              Печать
+            </Button>
+          </div>
+
+          <div className="border-2 border-black p-8 space-y-6">
+            <div className="text-center space-y-2 border-b-2 border-black pb-4">
+              <h1 className="text-2xl font-bold uppercase">ПРОТОКОЛ</h1>
+              <p className="text-lg">проверки знаний требований охраны труда</p>
+              <p className="text-sm">№ {Math.floor(Math.random() * 10000)} от {new Date().toLocaleDateString('ru-RU')}</p>
+            </div>
+
+            <div className="space-y-3">
+              <div className="grid grid-cols-[150px,1fr] gap-2">
+                <span className="font-medium">Организация:</span>
+                <span>АО "ГРК "Западная""</span>
+              </div>
+              <div className="grid grid-cols-[150px,1fr] gap-2">
+                <span className="font-medium">Название теста:</span>
+                <span>{test.title}</span>
+              </div>
+              <div className="grid grid-cols-[150px,1fr] gap-2">
+                <span className="font-medium">Дата проведения:</span>
+                <span>{new Date(result.completedAt).toLocaleDateString('ru-RU')}</span>
+              </div>
+              <div className="grid grid-cols-[150px,1fr] gap-2">
+                <span className="font-medium">Время проведения:</span>
+                <span>{new Date(result.completedAt).toLocaleTimeString('ru-RU')}</span>
+              </div>
+            </div>
+
+            <div className="border-t-2 border-black pt-4 space-y-3">
+              <h2 className="font-bold text-lg">Результаты тестирования:</h2>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="border border-black p-3">
+                  <p className="text-sm text-gray-600">Всего вопросов:</p>
+                  <p className="text-xl font-bold">{test.questions.length}</p>
+                </div>
+                <div className="border border-black p-3">
+                  <p className="text-sm text-gray-600">Правильных ответов:</p>
+                  <p className="text-xl font-bold">
+                    {test.questions.filter(q => {
+                      const userAnswer = userAnswers.get(q.id);
+                      if (q.type === 'text') return userAnswer?.textAnswer;
+                      const correct = q.answers.filter(a => a.isCorrect).map(a => a.id).sort();
+                      const selected = (userAnswer?.selectedAnswers || []).sort();
+                      return JSON.stringify(correct) === JSON.stringify(selected);
+                    }).length}
+                  </p>
+                </div>
+                <div className="border border-black p-3">
+                  <p className="text-sm text-gray-600">Набрано баллов:</p>
+                  <p className="text-xl font-bold">{result.earnedPoints} из {result.totalPoints}</p>
+                </div>
+                <div className="border border-black p-3">
+                  <p className="text-sm text-gray-600">Результат:</p>
+                  <p className="text-xl font-bold">{result.percentage}%</p>
+                </div>
+              </div>
+              
+              <div className={`border-2 p-4 text-center ${
+                result.passed ? 'border-green-600 bg-green-50' : 'border-red-600 bg-red-50'
+              }`}>
+                <p className="text-xl font-bold uppercase ${
+                  result.passed ? 'text-green-800' : 'text-red-800'
+                }">
+                  {result.passed ? '✓ ТЕСТ ПРОЙДЕН' : '✗ ТЕСТ НЕ ПРОЙДЕН'}
+                </p>
+                <p className="text-sm mt-1">
+                  Проходной балл: {test.passingScore}%
+                </p>
+              </div>
+            </div>
+
+            <div className="border-t-2 border-black pt-6 space-y-8">
+              <div className="space-y-2">
+                <p className="font-medium">Тестируемый:</p>
+                <div className="border-b-2 border-black pt-8 pb-2 flex justify-between">
+                  <span className="text-sm text-gray-600">___________________</span>
+                  <span className="text-sm text-gray-600">_______________________________</span>
+                </div>
+                <div className="flex justify-between text-xs text-gray-600">
+                  <span>(подпись)</span>
+                  <span>(Фамилия И.О.)</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="font-medium">Проверяющий (инспектор по охране труда):</p>
+                <div className="border-b-2 border-black pt-8 pb-2 flex justify-between">
+                  <span className="text-sm text-gray-600">___________________</span>
+                  <span className="text-sm text-gray-600">_______________________________</span>
+                </div>
+                <div className="flex justify-between text-xs text-gray-600">
+                  <span>(подпись)</span>
+                  <span>(Фамилия И.О.)</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="text-xs text-gray-500 text-center pt-4 border-t border-gray-300">
+              <p>Протокол сгенерирован автоматически системой тестирования АО "ГРК "Западная""</p>
+              <p>Документ действителен только при наличии подписей тестируемого и проверяющего</p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
