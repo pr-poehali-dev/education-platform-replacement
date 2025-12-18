@@ -40,6 +40,11 @@ export default function ListenerProgramsSetup({ listenerId, onBack, onSave }: Li
   });
 
   const [availableTests, setAvailableTests] = useState<any[]>([]);
+  
+  const [testDeadlines, setTestDeadlines] = useState<Record<string, string>>(() => {
+    const saved = localStorage.getItem(`listener_test_deadlines_${listenerId}`);
+    return saved ? JSON.parse(saved) : {};
+  });
 
   useEffect(() => {
     const savedTests = localStorage.getItem('tests_catalog');
@@ -56,6 +61,10 @@ export default function ListenerProgramsSetup({ listenerId, onBack, onSave }: Li
     localStorage.setItem(`listener_tests_${listenerId}`, JSON.stringify(selectedTests));
   }, [selectedTests, listenerId]);
 
+  useEffect(() => {
+    localStorage.setItem(`listener_test_deadlines_${listenerId}`, JSON.stringify(testDeadlines));
+  }, [testDeadlines, listenerId]);
+
   const toggleProgram = (programId: string) => {
     setSelectedPrograms(prev => 
       prev.includes(programId)
@@ -65,11 +74,35 @@ export default function ListenerProgramsSetup({ listenerId, onBack, onSave }: Li
   };
 
   const toggleTest = (testId: string) => {
-    setSelectedTests(prev => 
-      prev.includes(testId)
-        ? prev.filter(id => id !== testId)
-        : [...prev, testId]
-    );
+    setSelectedTests(prev => {
+      const isRemoving = prev.includes(testId);
+      if (isRemoving) {
+        // Remove deadline when unchecking
+        setTestDeadlines(current => {
+          const updated = { ...current };
+          delete updated[testId];
+          return updated;
+        });
+        return prev.filter(id => id !== testId);
+      } else {
+        // Set default deadline (30 days from now) when checking
+        const defaultDeadline = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          .toISOString()
+          .split('T')[0];
+        setTestDeadlines(current => ({
+          ...current,
+          [testId]: defaultDeadline
+        }));
+        return [...prev, testId];
+      }
+    });
+  };
+
+  const handleDeadlineChange = (testId: string, deadline: string) => {
+    setTestDeadlines(prev => ({
+      ...prev,
+      [testId]: deadline
+    }));
   };
 
   const handleSave = () => {
@@ -321,19 +354,40 @@ export default function ListenerProgramsSetup({ listenerId, onBack, onSave }: Li
                           </div>
                         </CardHeader>
                         <CardContent>
-                          <div className="flex gap-6 text-sm">
-                            <div className="flex items-center gap-2">
-                              <Icon name="FileQuestion" className="h-4 w-4 text-muted-foreground" />
-                              <span>{test.questionCount} вопросов</span>
+                          <div className="space-y-3">
+                            <div className="flex gap-6 text-sm">
+                              <div className="flex items-center gap-2">
+                                <Icon name="FileQuestion" className="h-4 w-4 text-muted-foreground" />
+                                <span>{test.questionCount} вопросов</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Icon name="Clock" className="h-4 w-4 text-muted-foreground" />
+                                <span>{test.duration} минут</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Icon name="Target" className="h-4 w-4 text-muted-foreground" />
+                                <span>Проходной балл: {test.passingScore}%</span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Icon name="Clock" className="h-4 w-4 text-muted-foreground" />
-                              <span>{test.duration} минут</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Icon name="Target" className="h-4 w-4 text-muted-foreground" />
-                              <span>Проходной балл: {test.passingScore}%</span>
-                            </div>
+                            {isSelected && (
+                              <div className="pt-3 border-t">
+                                <label className="block text-sm font-medium mb-2">
+                                  <Icon name="Calendar" className="h-4 w-4 inline mr-2 text-purple-600" />
+                                  Крайний срок сдачи:
+                                </label>
+                                <input
+                                  type="date"
+                                  value={testDeadlines[test.id] || ''}
+                                  onChange={(e) => {
+                                    e.stopPropagation();
+                                    handleDeadlineChange(test.id, e.target.value);
+                                  }}
+                                  onClick={(e) => e.stopPropagation()}
+                                  min={new Date().toISOString().split('T')[0]}
+                                  className="px-3 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                />
+                              </div>
+                            )}
                           </div>
                         </CardContent>
                       </Card>

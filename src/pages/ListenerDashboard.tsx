@@ -87,10 +87,12 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
 
       const savedTests = localStorage.getItem(`listener_tests_${listener.listenerId}`);
       const allTests = localStorage.getItem('tests_catalog');
+      const deadlines = localStorage.getItem(`listener_test_deadlines_${listener.listenerId}`);
       
       if (savedTests && allTests) {
         const testIds = JSON.parse(savedTests);
         const testsData = JSON.parse(allTests);
+        const testDeadlines = deadlines ? JSON.parse(deadlines) : {};
         
         const tests = testIds
           .map((id: string) => testsData.find((t: any) => t.id === id))
@@ -106,11 +108,27 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
               }
             }
             
+            const deadline = testDeadlines[test.id];
+            const isOverdue = deadline && new Date(deadline) < new Date() && (!lastResult || !lastResult.passed);
+            const daysLeft = deadline ? Math.ceil((new Date(deadline).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
+            
             return {
               ...test,
               lastResult,
-              attempts: results ? JSON.parse(results).filter((r: any) => r.testId === test.id).length : 0
+              attempts: results ? JSON.parse(results).filter((r: any) => r.testId === test.id).length : 0,
+              deadline,
+              isOverdue,
+              daysLeft
             };
+          })
+          .sort((a, b) => {
+            // Сортировка: просроченные сверху, затем по дате дедлайна
+            if (a.isOverdue && !b.isOverdue) return -1;
+            if (!a.isOverdue && b.isOverdue) return 1;
+            if (a.deadline && b.deadline) {
+              return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+            }
+            return 0;
           });
         
         setAssignedTests(tests);
@@ -270,7 +288,35 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
           </CardContent>
         </Card>
 
-        {assignedTests.filter(t => !t.lastResult || !t.lastResult.passed).length > 0 && (
+        {assignedTests.filter(t => t.isOverdue).length > 0 && (
+          <Card className="mb-8 border-2 border-red-400 bg-gradient-to-r from-red-50 to-pink-50 animate-pulse">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="bg-red-500 p-3 rounded-xl">
+                  <Icon name="AlertTriangle" className="h-6 w-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-red-900 mb-1 flex items-center gap-2">
+                    Срочно! Просроченные тесты
+                  </h3>
+                  <p className="text-sm text-red-700">
+                    У вас <strong>{assignedTests.filter(t => t.isOverdue).length}</strong> {assignedTests.filter(t => t.isOverdue).length === 1 ? 'просроченный тест' : 'просроченных тестов'}. 
+                    Пожалуйста, пройдите их как можно скорее!
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => setActiveTab('my-page')}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  Пройти сейчас
+                  <Icon name="ArrowRight" className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {assignedTests.filter(t => !t.isOverdue && (!t.lastResult || !t.lastResult.passed)).length > 0 && (
           <Card className="mb-8 border-2 border-orange-300 bg-gradient-to-r from-orange-50 to-yellow-50">
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
@@ -282,18 +328,21 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
                     Требуется ваше внимание
                   </h3>
                   <p className="text-sm text-orange-700">
-                    У вас {assignedTests.filter(t => !t.lastResult).length > 0 && (
+                    {assignedTests.filter(t => !t.isOverdue && !t.lastResult).length > 0 && (
                       <>
-                        <strong>{assignedTests.filter(t => !t.lastResult).length}</strong> непройденных {assignedTests.filter(t => !t.lastResult).length === 1 ? 'тест' : 'тестов'}
+                        У вас <strong>{assignedTests.filter(t => !t.isOverdue && !t.lastResult).length}</strong> непройденных {assignedTests.filter(t => !t.isOverdue && !t.lastResult).length === 1 ? 'тест' : 'тестов'}
                       </>
                     )}
-                    {assignedTests.filter(t => !t.lastResult).length > 0 && assignedTests.filter(t => t.lastResult && !t.lastResult.passed).length > 0 && ' и '}
-                    {assignedTests.filter(t => t.lastResult && !t.lastResult.passed).length > 0 && (
+                    {assignedTests.filter(t => !t.isOverdue && !t.lastResult).length > 0 && assignedTests.filter(t => !t.isOverdue && t.lastResult && !t.lastResult.passed).length > 0 && ' и '}
+                    {assignedTests.filter(t => !t.isOverdue && t.lastResult && !t.lastResult.passed).length > 0 && (
                       <>
-                        <strong>{assignedTests.filter(t => t.lastResult && !t.lastResult.passed).length}</strong> {assignedTests.filter(t => t.lastResult && !t.lastResult.passed).length === 1 ? 'тест не пройден' : 'теста не пройдено'}
+                        <strong>{assignedTests.filter(t => !t.isOverdue && t.lastResult && !t.lastResult.passed).length}</strong> {assignedTests.filter(t => !t.isOverdue && t.lastResult && !t.lastResult.passed).length === 1 ? 'тест не пройден' : 'теста не пройдено'}
                       </>
                     )}
-                    . Пожалуйста, завершите тестирование.
+                    . 
+                    {assignedTests.filter(t => t.daysLeft !== null && t.daysLeft <= 3 && !t.isOverdue).length > 0 && (
+                      <> <strong>{assignedTests.filter(t => t.daysLeft !== null && t.daysLeft <= 3 && !t.isOverdue).length}</strong> {assignedTests.filter(t => t.daysLeft !== null && t.daysLeft <= 3 && !t.isOverdue).length === 1 ? 'тест истекает' : 'тестов истекают'} в ближайшие 3 дня.</>
+                    )}
                   </p>
                 </div>
                 <Button 
@@ -386,24 +435,46 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
                   </CardHeader>
                 </Card>
 
-                <Card className={assignedTests.filter(t => !t.lastResult || !t.lastResult.passed).length > 0 ? 'border-2 border-orange-300' : ''}>
+                <Card className={
+                  assignedTests.filter(t => t.isOverdue).length > 0 
+                    ? 'border-2 border-red-400' 
+                    : assignedTests.filter(t => t.daysLeft !== null && t.daysLeft <= 3).length > 0 
+                    ? 'border-2 border-orange-300' 
+                    : ''
+                }>
                   <CardHeader>
                     <div className="flex items-center gap-3">
                       <div className={`bg-gradient-to-br p-3 rounded-xl ${
-                        assignedTests.filter(t => !t.lastResult || !t.lastResult.passed).length > 0 
+                        assignedTests.filter(t => t.isOverdue).length > 0 
+                          ? 'from-red-500 to-red-600' 
+                          : assignedTests.filter(t => t.daysLeft !== null && t.daysLeft <= 3).length > 0 
                           ? 'from-orange-500 to-red-500' 
                           : 'from-gray-400 to-gray-500'
                       }`}>
-                        <Icon name="AlertCircle" className="h-6 w-6 text-white" />
+                        <Icon name={
+                          assignedTests.filter(t => t.isOverdue).length > 0 
+                            ? 'AlertTriangle' 
+                            : 'AlertCircle'
+                        } className="h-6 w-6 text-white" />
                       </div>
                       <div>
-                        <CardDescription>Требуют внимания</CardDescription>
+                        <CardDescription>
+                          {assignedTests.filter(t => t.isOverdue).length > 0 
+                            ? 'Просрочено' 
+                            : 'Требуют внимания'
+                          }
+                        </CardDescription>
                         <CardTitle className={`text-3xl ${
-                          assignedTests.filter(t => !t.lastResult || !t.lastResult.passed).length > 0 
+                          assignedTests.filter(t => t.isOverdue).length > 0 
+                            ? 'text-red-600' 
+                            : assignedTests.filter(t => t.daysLeft !== null && t.daysLeft <= 3).length > 0 
                             ? 'text-orange-600' 
                             : ''
                         }`}>
-                          {assignedTests.filter(t => !t.lastResult || !t.lastResult.passed).length}
+                          {assignedTests.filter(t => t.isOverdue).length > 0 
+                            ? assignedTests.filter(t => t.isOverdue).length
+                            : assignedTests.filter(t => !t.isOverdue && (t.daysLeft !== null && t.daysLeft <= 3 || !t.lastResult || !t.lastResult.passed)).length
+                          }
                         </CardTitle>
                       </div>
                     </div>
@@ -605,53 +676,114 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
                         .map((test) => (
                         <Card 
                           key={test.id} 
-                          className="hover:shadow-md transition-all cursor-pointer border-2 hover:border-purple-300"
+                          className={`hover:shadow-md transition-all cursor-pointer border-2 ${
+                            test.isOverdue 
+                              ? 'border-red-400 bg-red-50/50' 
+                              : test.daysLeft !== null && test.daysLeft <= 3 
+                              ? 'border-orange-400 bg-orange-50/50'
+                              : 'hover:border-purple-300'
+                          }`}
                           onClick={() => onStartTest?.(test.id)}
                         >
                           <CardContent className="pt-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3 flex-1">
-                                <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-3 rounded-xl">
-                                  <Icon name="FileCheck" className="h-6 w-6 text-white" />
-                                </div>
-                                <div className="flex-1">
-                                  <p className="font-semibold">{test.title}</p>
-                                  <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                                    <span className="flex items-center gap-1">
-                                      <Icon name="FileQuestion" className="h-3 w-3" />
-                                      {test.questionCount} вопросов
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      <Icon name="Clock" className="h-3 w-3" />
-                                      {test.duration} мин
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      <Icon name="Target" className="h-3 w-3" />
-                                      {test.passingScore}% проходной
-                                    </span>
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3 flex-1">
+                                  <div className={`bg-gradient-to-br p-3 rounded-xl ${
+                                    test.isOverdue 
+                                      ? 'from-red-500 to-red-600' 
+                                      : 'from-purple-500 to-pink-500'
+                                  }`}>
+                                    <Icon name="FileCheck" className="h-6 w-6 text-white" />
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2">
+                                      <p className="font-semibold">{test.title}</p>
+                                      {test.isOverdue && (
+                                        <Badge variant="destructive" className="animate-pulse">
+                                          <Icon name="AlertTriangle" className="h-3 w-3 mr-1" />
+                                          Просрочено
+                                        </Badge>
+                                      )}
+                                      {!test.isOverdue && test.daysLeft !== null && test.daysLeft <= 3 && (
+                                        <Badge className="bg-orange-500">
+                                          <Icon name="Clock" className="h-3 w-3 mr-1" />
+                                          {test.daysLeft} дн.
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                                      <span className="flex items-center gap-1">
+                                        <Icon name="FileQuestion" className="h-3 w-3" />
+                                        {test.questionCount} вопросов
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <Icon name="Clock" className="h-3 w-3" />
+                                        {test.duration} мин
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <Icon name="Target" className="h-3 w-3" />
+                                        {test.passingScore}% проходной
+                                      </span>
+                                    </div>
                                   </div>
                                 </div>
+                                <div className="flex items-center gap-3">
+                                  {test.lastResult ? (
+                                    <div className="text-right">
+                                      <Badge 
+                                        className={test.lastResult.passed ? 'bg-green-600' : 'bg-red-600'}
+                                      >
+                                        {test.lastResult.percentage}%
+                                      </Badge>
+                                      <p className="text-xs text-muted-foreground mt-1">
+                                        Попыток: {test.attempts}
+                                      </p>
+                                    </div>
+                                  ) : (
+                                    <Badge variant="outline">Не пройден</Badge>
+                                  )}
+                                  <Button size="sm" className={
+                                    test.isOverdue 
+                                      ? 'bg-red-600 hover:bg-red-700' 
+                                      : 'bg-purple-600 hover:bg-purple-700'
+                                  }>
+                                    <Icon name="Play" className="h-4 w-4 mr-1" />
+                                    {test.lastResult ? 'Пройти заново' : 'Начать'}
+                                  </Button>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-3">
-                                {test.lastResult ? (
-                                  <div className="text-right">
-                                    <Badge 
-                                      className={test.lastResult.passed ? 'bg-green-600' : 'bg-red-600'}
-                                    >
-                                      {test.lastResult.percentage}%
-                                    </Badge>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                      Попыток: {test.attempts}
-                                    </p>
+                              {test.deadline && (
+                                <div className={`flex items-center justify-between text-sm p-2 rounded-lg ${
+                                  test.isOverdue 
+                                    ? 'bg-red-100 text-red-900' 
+                                    : test.daysLeft !== null && test.daysLeft <= 3
+                                    ? 'bg-orange-100 text-orange-900'
+                                    : 'bg-purple-100 text-purple-900'
+                                }`}>
+                                  <div className="flex items-center gap-2">
+                                    <Icon name="Calendar" className="h-4 w-4" />
+                                    <span className="font-medium">
+                                      Крайний срок: {new Date(test.deadline).toLocaleDateString('ru-RU')}
+                                    </span>
                                   </div>
-                                ) : (
-                                  <Badge variant="outline">Не пройден</Badge>
-                                )}
-                                <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
-                                  <Icon name="Play" className="h-4 w-4 mr-1" />
-                                  {test.lastResult ? 'Пройти заново' : 'Начать'}
-                                </Button>
-                              </div>
+                                  {!test.isOverdue && test.daysLeft !== null && (
+                                    <span className="text-xs font-semibold">
+                                      {test.daysLeft === 0 
+                                        ? 'Сегодня!' 
+                                        : test.daysLeft === 1 
+                                        ? 'Завтра' 
+                                        : `Осталось ${test.daysLeft} дн.`
+                                      }
+                                    </span>
+                                  )}
+                                  {test.isOverdue && (
+                                    <span className="text-xs font-semibold">
+                                      Просрочено на {Math.abs(test.daysLeft || 0)} дн.
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </CardContent>
                         </Card>
@@ -677,18 +809,35 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
                 </Card>
               )}
 
-              {assignedTests.filter(t => !t.lastResult).length > 0 && (
-                <Card className="border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50">
+              {assignedTests.filter(t => t.isOverdue).length > 0 && (
+                <Card className="border-2 border-red-300 bg-gradient-to-br from-red-50 to-pink-50">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Icon name="AlertCircle" className="h-5 w-5 text-orange-600" />
-                      Напоминание
+                      <Icon name="AlertTriangle" className="h-5 w-5 text-red-600" />
+                      Просроченные тесты
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm">
-                      У вас есть <strong>{assignedTests.filter(t => !t.lastResult).length}</strong> непройденных {assignedTests.filter(t => !t.lastResult).length === 1 ? 'тест' : 'тестов'}. 
-                      Пожалуйста, завершите тестирование для подтверждения знаний.
+                      У вас <strong>{assignedTests.filter(t => t.isOverdue).length}</strong> {assignedTests.filter(t => t.isOverdue).length === 1 ? 'просроченный тест' : 'просроченных тестов'}. 
+                      Это может повлиять на вашу аттестацию. Пройдите их как можно скорее!
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {assignedTests.filter(t => !t.isOverdue && t.daysLeft !== null && t.daysLeft <= 3).length > 0 && (
+                <Card className="border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Icon name="Clock" className="h-5 w-5 text-orange-600" />
+                      Срочно требуют внимания
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm">
+                      У вас <strong>{assignedTests.filter(t => !t.isOverdue && t.daysLeft !== null && t.daysLeft <= 3).length}</strong> {assignedTests.filter(t => !t.isOverdue && t.daysLeft !== null && t.daysLeft <= 3).length === 1 ? 'тест истекает' : 'тестов истекают'} в ближайшие 3 дня. 
+                      Не пропустите крайний срок!
                     </p>
                   </CardContent>
                 </Card>
