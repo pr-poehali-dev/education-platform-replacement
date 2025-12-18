@@ -347,7 +347,7 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
                   </p>
                 </div>
                 <Button 
-                  onClick={() => setActiveTab('my-page')}
+                  onClick={() => setActiveTab('testing')}
                   className="bg-orange-600 hover:bg-orange-700"
                 >
                   Перейти к тестам
