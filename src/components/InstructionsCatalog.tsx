@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Document, Paragraph, Packer, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
@@ -59,6 +59,8 @@ export default function InstructionsCatalog({
   const [editedContent, setEditedContent] = useState('');
   const [editedTitle, setEditedTitle] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const filteredInstructions = instructions.filter(inst => {
     if (selectedCategory !== 'all' && inst.category !== selectedCategory) return false;
@@ -128,6 +130,39 @@ export default function InstructionsCatalog({
     setIsEditing(false);
     setEditedContent(selectedInstruction?.content || '');
     setEditedTitle(selectedInstruction?.title || '');
+  };
+
+  const handleDeleteInstruction = async () => {
+    if (!selectedInstruction) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch(API_URL, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: selectedInstruction.id
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setShowPreviewDialog(false);
+        setShowDeleteConfirm(false);
+        onInstructionUpdate?.();
+        alert('Инструкция успешно удалена');
+      } else {
+        throw new Error(data.error || 'Unknown error');
+      }
+    } catch (error) {
+      console.error('Failed to delete instruction:', error);
+      alert('Не удалось удалить инструкцию');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleDownloadWord = async () => {
@@ -367,14 +402,23 @@ export default function InstructionsCatalog({
               
               <div className="flex gap-2 mt-4">
                 {isAdmin && !isEditing && (
-                  <Button 
-                    variant="default" 
-                    onClick={() => setIsEditing(true)}
-                    className="bg-blue-600 hover:bg-blue-700"
-                  >
-                    <Icon name="Edit" className="h-4 w-4 mr-2" />
-                    Редактировать
-                  </Button>
+                  <>
+                    <Button 
+                      variant="default" 
+                      onClick={() => setIsEditing(true)}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Icon name="Edit" className="h-4 w-4 mr-2" />
+                      Редактировать
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      onClick={() => setShowDeleteConfirm(true)}
+                    >
+                      <Icon name="Trash2" className="h-4 w-4 mr-2" />
+                      Удалить
+                    </Button>
+                  </>
                 )}
                 
                 {isEditing && (
@@ -422,6 +466,35 @@ export default function InstructionsCatalog({
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Подтверждение удаления</DialogTitle>
+            <DialogDescription>
+              Вы уверены, что хотите удалить инструкцию "{selectedInstruction?.title}"?
+              Это действие нельзя отменить.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowDeleteConfirm(false)}
+              disabled={isDeleting}
+            >
+              Отмена
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteInstruction}
+              disabled={isDeleting}
+            >
+              <Icon name="Trash2" className="h-4 w-4 mr-2" />
+              {isDeleting ? 'Удаление...' : 'Удалить'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

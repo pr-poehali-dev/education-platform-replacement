@@ -16,7 +16,7 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
             'statusCode': 200,
             'headers': {
                 'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'GET, POST, PUT, OPTIONS',
+                'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
                 'Access-Control-Allow-Headers': 'Content-Type',
                 'Access-Control-Max-Age': '86400'
             },
@@ -134,6 +134,28 @@ def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
                     'body': json.dumps({'success': True, 'message': 'Instruction updated'}, ensure_ascii=False),
                     'isBase64Encoded': False
                 }
+        
+        elif method == 'DELETE':
+            body_data = json.loads(event.get('body', '{}'))
+            instruction_id = body_data.get('id')
+            
+            if not instruction_id:
+                return {
+                    'statusCode': 400,
+                    'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                    'body': json.dumps({'error': 'Missing instruction id'}, ensure_ascii=False),
+                    'isBase64Encoded': False
+                }
+            
+            cursor.execute('DELETE FROM instructions WHERE id = %s', (instruction_id,))
+            conn.commit()
+            
+            return {
+                'statusCode': 200,
+                'headers': {'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({'success': True, 'message': 'Instruction deleted'}, ensure_ascii=False),
+                'isBase64Encoded': False
+            }
         
         return {
             'statusCode': 400,
