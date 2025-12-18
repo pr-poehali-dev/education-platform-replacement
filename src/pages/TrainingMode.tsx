@@ -541,12 +541,71 @@ export default function TrainingMode({ onBack, listenerId, assignedTests }: Trai
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
-          <Card>
-            <CardHeader>
-              <CardTitle>Настройка тренировки</CardTitle>
-              <CardDescription>Выберите тест и количество вопросов для практики</CardDescription>
-            </CardHeader>
+        <div className="max-w-6xl mx-auto space-y-6">
+          {savedResults.length > 0 && (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs">Всего попыток</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2">
+                    <Icon name="BarChart3" className="h-8 w-8 text-blue-600" />
+                    <span className="text-3xl font-bold">{savedResults.length}</span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs">Средний результат</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2">
+                    <Icon name="TrendingUp" className="h-8 w-8 text-green-600" />
+                    <span className="text-3xl font-bold">
+                      {Math.round(savedResults.reduce((acc, r) => acc + r.percentage, 0) / savedResults.length)}%
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs">Лучший результат</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2">
+                    <Icon name="Award" className="h-8 w-8 text-yellow-600" />
+                    <span className="text-3xl font-bold">
+                      {Math.max(...savedResults.map(r => r.percentage))}%
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription className="text-xs">Успешных тренировок</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2">
+                    <Icon name="CheckCircle2" className="h-8 w-8 text-emerald-600" />
+                    <span className="text-3xl font-bold">
+                      {savedResults.filter(r => r.percentage >= 80).length}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          <div className="grid lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Настройка тренировки</CardTitle>
+                <CardDescription>Выберите тест и количество вопросов для практики</CardDescription>
+              </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <Label>Выберите тест</Label>
@@ -673,6 +732,7 @@ export default function TrainingMode({ onBack, listenerId, assignedTests }: Trai
               )}
             </CardContent>
           </Card>
+          </div>
         </div>
       </main>
     </div>
