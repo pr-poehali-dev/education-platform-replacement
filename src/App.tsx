@@ -408,7 +408,7 @@ function App() {
   if (currentView === 'test-runner' && selectedTestId) {
     return (
       <TestRunner 
-        onBack={() => setCurrentView('tests-catalog')}
+        onBack={() => setCurrentView(userRole === 'listener' ? 'listener-dashboard' : 'tests-catalog')}
         testId={selectedTestId}
       />
     );
