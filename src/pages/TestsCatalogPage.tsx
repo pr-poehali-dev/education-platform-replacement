@@ -11,6 +11,7 @@ interface TestsCatalogPageProps {
   onCreateTest: () => void;
   onEditTest: (testId: string) => void;
   onRunTest: (testId: string) => void;
+  onViewHistory: () => void;
 }
 
 type TestCategory = 
@@ -81,7 +82,7 @@ const getCategoryColor = (category: TestCategory): string => {
   return colors[category];
 };
 
-export default function TestsCatalogPage({ onBack, onCreateTest, onEditTest, onRunTest }: TestsCatalogPageProps) {
+export default function TestsCatalogPage({ onBack, onCreateTest, onEditTest, onRunTest, onViewHistory }: TestsCatalogPageProps) {
   const [tests, setTests] = useState<Test[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedTopic, setSelectedTopic] = useState<string>('all');
@@ -136,10 +137,16 @@ export default function TestsCatalogPage({ onBack, onCreateTest, onEditTest, onR
                 <p className="text-xs text-muted-foreground">Разработка и управление тестами</p>
               </div>
             </div>
-            <Button onClick={onCreateTest} className="bg-gradient-to-r from-purple-600 to-pink-500">
-              <Icon name="Plus" className="h-4 w-4 mr-2" />
-              Создать тест
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={onViewHistory} variant="outline">
+                <Icon name="BarChart3" className="h-4 w-4 mr-2" />
+                История прохождений
+              </Button>
+              <Button onClick={onCreateTest} className="bg-gradient-to-r from-purple-600 to-pink-500">
+                <Icon name="Plus" className="h-4 w-4 mr-2" />
+                Создать тест
+              </Button>
+            </div>
           </div>
         </div>
       </header>

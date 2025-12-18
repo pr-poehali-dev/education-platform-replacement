@@ -201,7 +201,12 @@ export default function TestBuilder({ onBack, testId }: TestBuilderProps) {
     
     setIsSaving(false);
     alert('Тест успешно сохранён');
-    onBack();
+    
+    if (testId) {
+      loadTest(testId);
+    } else {
+      onBack();
+    }
   };
 
   const handleAddQuestion = () => {
