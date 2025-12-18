@@ -34,15 +34,41 @@ export default function ListenerProgramsSetup({ listenerId, onBack, onSave }: Li
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [selectedTests, setSelectedTests] = useState<string[]>(() => {
+    const saved = localStorage.getItem(`listener_tests_${listenerId}`);
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [availableTests, setAvailableTests] = useState<any[]>([]);
+
+  useEffect(() => {
+    const savedTests = localStorage.getItem('tests_catalog');
+    if (savedTests) {
+      setAvailableTests(JSON.parse(savedTests));
+    }
+  }, []);
+
   useEffect(() => {
     localStorage.setItem(`listener_programs_${listenerId}`, JSON.stringify(selectedPrograms));
   }, [selectedPrograms, listenerId]);
+
+  useEffect(() => {
+    localStorage.setItem(`listener_tests_${listenerId}`, JSON.stringify(selectedTests));
+  }, [selectedTests, listenerId]);
 
   const toggleProgram = (programId: string) => {
     setSelectedPrograms(prev => 
       prev.includes(programId)
         ? prev.filter(id => id !== programId)
         : [...prev, programId]
+    );
+  };
+
+  const toggleTest = (testId: string) => {
+    setSelectedTests(prev => 
+      prev.includes(testId)
+        ? prev.filter(id => id !== testId)
+        : [...prev, testId]
     );
   };
 
@@ -133,10 +159,17 @@ export default function ListenerProgramsSetup({ listenerId, onBack, onSave }: Li
                   </div>
                 </div>
 
-                <div className="pt-4 border-t">
-                  <p className="text-sm font-medium mb-2">Выбрано программ</p>
-                  <p className="text-3xl font-bold text-blue-600">{selectedPrograms.length}</p>
-                  <p className="text-sm text-muted-foreground">из {allPrograms.length} доступных</p>
+                <div className="pt-4 border-t space-y-3">
+                  <div>
+                    <p className="text-sm font-medium mb-2">Выбрано программ</p>
+                    <p className="text-3xl font-bold text-blue-600">{selectedPrograms.length}</p>
+                    <p className="text-sm text-muted-foreground">из {allPrograms.length} доступных</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium mb-2">Выбрано тестов</p>
+                    <p className="text-3xl font-bold text-purple-600">{selectedTests.length}</p>
+                    <p className="text-sm text-muted-foreground">из {availableTests.length} доступных</p>
+                  </div>
                 </div>
 
                 <div className="pt-4 border-t space-y-2">
@@ -233,6 +266,81 @@ export default function ListenerProgramsSetup({ listenerId, onBack, onSave }: Li
                   </Card>
                 );
               })}
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-2xl font-bold mb-2">Назначение тестов</h2>
+                <p className="text-muted-foreground">Выберите тесты для проверки знаний слушателя</p>
+              </div>
+
+              {availableTests.length === 0 ? (
+                <Card>
+                  <CardContent className="text-center py-12">
+                    <Icon name="FileX" className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">Тестов пока нет. Создайте тесты в каталоге.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid gap-4">
+                  {availableTests.map((test) => {
+                    const isSelected = selectedTests.includes(test.id);
+                    return (
+                      <Card 
+                        key={test.id} 
+                        className={`cursor-pointer transition-all hover:shadow-lg ${
+                          isSelected ? 'ring-2 ring-purple-500 bg-purple-50/50' : ''
+                        }`}
+                        onClick={() => toggleTest(test.id)}
+                      >
+                        <CardHeader>
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-start gap-3 flex-1">
+                              <Checkbox 
+                                checked={isSelected}
+                                onCheckedChange={() => toggleTest(test.id)}
+                                className="mt-1"
+                              />
+                              <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-3 rounded-xl">
+                                <Icon name="FileCheck" className="h-6 w-6 text-white" />
+                              </div>
+                              <div className="flex-1">
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                  {test.title}
+                                  {isSelected && (
+                                    <Badge className="ml-2 bg-purple-600">
+                                      Назначено
+                                    </Badge>
+                                  )}
+                                </CardTitle>
+                                {test.description && (
+                                  <CardDescription className="mt-1">{test.description}</CardDescription>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex gap-6 text-sm">
+                            <div className="flex items-center gap-2">
+                              <Icon name="FileQuestion" className="h-4 w-4 text-muted-foreground" />
+                              <span>{test.questionCount} вопросов</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Icon name="Clock" className="h-4 w-4 text-muted-foreground" />
+                              <span>{test.duration} минут</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Icon name="Target" className="h-4 w-4 text-muted-foreground" />
+                              <span>Проходной балл: {test.passingScore}%</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>
