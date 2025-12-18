@@ -1,0 +1,21 @@
+{
+  "tests": [
+    {
+      "name": "Generate test questions",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "title": "Охрана труда при работе на высоте",
+        "category": "topic",
+        "topic": "work-at-height",
+        "questionCount": 5
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "questions": "array",
+        "message": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

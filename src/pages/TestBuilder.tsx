@@ -97,6 +97,7 @@ export default function TestBuilder({ onBack, testId }: TestBuilderProps) {
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const [showQuestionDialog, setShowQuestionDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     if (testId) {
@@ -118,6 +119,42 @@ export default function TestBuilder({ onBack, testId }: TestBuilderProps) {
         setDuration(test.duration);
         setQuestions(test.questions);
       }
+    }
+  };
+
+  const handleGenerateTest = async () => {
+    if (!title.trim()) {
+      alert('Введите название теста для генерации');
+      return;
+    }
+
+    const questionCount = prompt('Сколько вопросов сгенерировать?', '10');
+    if (!questionCount || isNaN(Number(questionCount))) return;
+
+    setIsGenerating(true);
+
+    try {
+      const response = await fetch('https://functions.poehali.dev/1bfacdc0-189a-40a3-b9c3-e5215a7de9ed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          category,
+          topic,
+          questionCount: Number(questionCount)
+        })
+      });
+
+      if (!response.ok) throw new Error('Ошибка генерации');
+
+      const data = await response.json();
+      setQuestions(data.questions);
+      alert(`Успешно сгенерировано ${data.questions.length} вопросов`);
+    } catch (error) {
+      console.error(error);
+      alert('Ошибка при генерации теста');
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -309,6 +346,15 @@ export default function TestBuilder({ onBack, testId }: TestBuilderProps) {
                 {questions.length} {questions.length === 1 ? 'вопрос' : 'вопросов'}
               </Badge>
               <Badge variant="secondary">{totalPoints} баллов</Badge>
+              <Button 
+                onClick={handleGenerateTest} 
+                disabled={isGenerating}
+                variant="outline"
+                className="border-purple-300 text-purple-700 hover:bg-purple-50"
+              >
+                <Icon name="Sparkles" className="h-4 w-4 mr-2" />
+                {isGenerating ? 'Генерация...' : 'Сгенерировать ИИ'}
+              </Button>
               <Button onClick={handleSaveTest} disabled={isSaving} className="bg-gradient-to-r from-green-600 to-emerald-500">
                 <Icon name="Save" className="h-4 w-4 mr-2" />
                 {isSaving ? 'Сохранение...' : 'Сохранить тест'}
