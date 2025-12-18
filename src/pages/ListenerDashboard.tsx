@@ -54,6 +54,7 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
   const [protocolData, setProtocolData] = useState<any>(null);
   const [assignedPrograms, setAssignedPrograms] = useState<any[]>([]);
   const [assignedTests, setAssignedTests] = useState<any[]>([]);
+  const [testFilter, setTestFilter] = useState<'all' | 'passed' | 'failed' | 'not-started'>('all');
 
   const certificates: any[] = [];
 
@@ -269,6 +270,44 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
           </CardContent>
         </Card>
 
+        {assignedTests.filter(t => !t.lastResult || !t.lastResult.passed).length > 0 && (
+          <Card className="mb-8 border-2 border-orange-300 bg-gradient-to-r from-orange-50 to-yellow-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="bg-orange-500 p-3 rounded-xl">
+                  <Icon name="AlertCircle" className="h-6 w-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-orange-900 mb-1">
+                    Требуется ваше внимание
+                  </h3>
+                  <p className="text-sm text-orange-700">
+                    У вас {assignedTests.filter(t => !t.lastResult).length > 0 && (
+                      <>
+                        <strong>{assignedTests.filter(t => !t.lastResult).length}</strong> непройденных {assignedTests.filter(t => !t.lastResult).length === 1 ? 'тест' : 'тестов'}
+                      </>
+                    )}
+                    {assignedTests.filter(t => !t.lastResult).length > 0 && assignedTests.filter(t => t.lastResult && !t.lastResult.passed).length > 0 && ' и '}
+                    {assignedTests.filter(t => t.lastResult && !t.lastResult.passed).length > 0 && (
+                      <>
+                        <strong>{assignedTests.filter(t => t.lastResult && !t.lastResult.passed).length}</strong> {assignedTests.filter(t => t.lastResult && !t.lastResult.passed).length === 1 ? 'тест не пройден' : 'теста не пройдено'}
+                      </>
+                    )}
+                    . Пожалуйста, завершите тестирование.
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => setActiveTab('my-page')}
+                  className="bg-orange-600 hover:bg-orange-700"
+                >
+                  Перейти к тестам
+                  <Icon name="ArrowRight" className="h-4 w-4 ml-2" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="bg-white grid grid-cols-6 w-full">
             <TabsTrigger value="my-page">
@@ -304,7 +343,7 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
                 <p className="text-muted-foreground">Личная информация и прогресс обучения</p>
               </div>
 
-              <div className="grid md:grid-cols-3 gap-6">
+              <div className="grid md:grid-cols-4 gap-6">
                 <Card>
                   <CardHeader>
                     <div className="flex items-center gap-3">
@@ -342,6 +381,30 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
                       <div>
                         <CardDescription>Тестов назначено</CardDescription>
                         <CardTitle className="text-3xl">{assignedTests.length}</CardTitle>
+                      </div>
+                    </div>
+                  </CardHeader>
+                </Card>
+
+                <Card className={assignedTests.filter(t => !t.lastResult || !t.lastResult.passed).length > 0 ? 'border-2 border-orange-300' : ''}>
+                  <CardHeader>
+                    <div className="flex items-center gap-3">
+                      <div className={`bg-gradient-to-br p-3 rounded-xl ${
+                        assignedTests.filter(t => !t.lastResult || !t.lastResult.passed).length > 0 
+                          ? 'from-orange-500 to-red-500' 
+                          : 'from-gray-400 to-gray-500'
+                      }`}>
+                        <Icon name="AlertCircle" className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <CardDescription>Требуют внимания</CardDescription>
+                        <CardTitle className={`text-3xl ${
+                          assignedTests.filter(t => !t.lastResult || !t.lastResult.passed).length > 0 
+                            ? 'text-orange-600' 
+                            : ''
+                        }`}>
+                          {assignedTests.filter(t => !t.lastResult || !t.lastResult.passed).length}
+                        </CardTitle>
                       </div>
                     </div>
                   </CardHeader>
@@ -489,15 +552,57 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
               {assignedTests.length > 0 && (
                 <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Icon name="FileCheck" className="h-5 w-5 text-purple-600" />
-                      Назначенные тесты
-                    </CardTitle>
-                    <CardDescription>Пройдите тесты для проверки знаний</CardDescription>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="flex items-center gap-2">
+                          <Icon name="FileCheck" className="h-5 w-5 text-purple-600" />
+                          Назначенные тесты
+                        </CardTitle>
+                        <CardDescription>Пройдите тесты для проверки знаний</CardDescription>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant={testFilter === 'all' ? 'default' : 'outline'}
+                          onClick={() => setTestFilter('all')}
+                        >
+                          Все
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant={testFilter === 'not-started' ? 'default' : 'outline'}
+                          onClick={() => setTestFilter('not-started')}
+                        >
+                          Не начатые
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant={testFilter === 'passed' ? 'default' : 'outline'}
+                          onClick={() => setTestFilter('passed')}
+                        >
+                          Пройдены
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant={testFilter === 'failed' ? 'default' : 'outline'}
+                          onClick={() => setTestFilter('failed')}
+                        >
+                          Не пройдены
+                        </Button>
+                      </div>
+                    </div>
                   </CardHeader>
                   <CardContent>
                     <div className="grid gap-3">
-                      {assignedTests.map((test) => (
+                      {assignedTests
+                        .filter(test => {
+                          if (testFilter === 'all') return true;
+                          if (testFilter === 'not-started') return !test.lastResult;
+                          if (testFilter === 'passed') return test.lastResult?.passed;
+                          if (testFilter === 'failed') return test.lastResult && !test.lastResult.passed;
+                          return true;
+                        })
+                        .map((test) => (
                         <Card 
                           key={test.id} 
                           className="hover:shadow-md transition-all cursor-pointer border-2 hover:border-purple-300"
@@ -551,7 +656,40 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
                           </CardContent>
                         </Card>
                       ))}
+                      {assignedTests.filter(test => {
+                        if (testFilter === 'all') return true;
+                        if (testFilter === 'not-started') return !test.lastResult;
+                        if (testFilter === 'passed') return test.lastResult?.passed;
+                        if (testFilter === 'failed') return test.lastResult && !test.lastResult.passed;
+                        return true;
+                      }).length === 0 && (
+                        <div className="text-center py-8">
+                          <Icon name="Filter" className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                          <p className="text-muted-foreground">
+                            {testFilter === 'not-started' && 'Все тесты уже начаты'}
+                            {testFilter === 'passed' && 'Нет пройденных тестов'}
+                            {testFilter === 'failed' && 'Нет непройденных тестов'}
+                          </p>
+                        </div>
+                      )}
                     </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {assignedTests.filter(t => !t.lastResult).length > 0 && (
+                <Card className="border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Icon name="AlertCircle" className="h-5 w-5 text-orange-600" />
+                      Напоминание
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm">
+                      У вас есть <strong>{assignedTests.filter(t => !t.lastResult).length}</strong> непройденных {assignedTests.filter(t => !t.lastResult).length === 1 ? 'тест' : 'тестов'}. 
+                      Пожалуйста, завершите тестирование для подтверждения знаний.
+                    </p>
                   </CardContent>
                 </Card>
               )}
