@@ -243,7 +243,7 @@ function App() {
   }
 
   if (currentView === 'catalog' && adminUser) {
-    return <CatalogPage onBack={handleBackToAdminHome} />;
+    return <CatalogPage onBack={handleBackToAdminHome} isAdmin={true} />;
   }
 
   if (currentView === 'programs' && adminUser) {

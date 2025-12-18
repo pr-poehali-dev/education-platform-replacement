@@ -27,9 +27,11 @@ interface InstructionsCatalogProps {
   selectedIndustry: string;
   setSelectedIndustry: (value: string) => void;
   onGenerateClick: () => void;
+  isAdmin?: boolean;
+  onInstructionUpdate?: () => void;
 }
 
-const API_URL = 'https://functions.poehali.dev/26432853-bc16-442a-aabf-e90c33bae6c2';
+const API_URL = 'https://functions.poehali.dev/0f54b4eb-703c-4b13-9825-e72b135c9d1b';
 
 const getCategoryIcon = (category: string) => {
   const icons: Record<string, string> = {
@@ -46,11 +48,17 @@ export default function InstructionsCatalog({
   setSelectedCategory,
   selectedIndustry,
   setSelectedIndustry,
-  onGenerateClick
+  onGenerateClick,
+  isAdmin = false,
+  onInstructionUpdate
 }: InstructionsCatalogProps) {
   const [selectedInstruction, setSelectedInstruction] = useState<Instruction | null>(null);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState('');
+  const [editedTitle, setEditedTitle] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   const filteredInstructions = instructions.filter(inst => {
     if (selectedCategory !== 'all' && inst.category !== selectedCategory) return false;
@@ -64,13 +72,62 @@ export default function InstructionsCatalog({
       const response = await fetch(`${API_URL}?path=instruction&id=${instruction.id}`);
       const data = await response.json();
       setSelectedInstruction(data.instruction);
+      setEditedContent(data.instruction.content || '');
+      setEditedTitle(data.instruction.title || '');
       setShowPreviewDialog(true);
+      setIsEditing(false);
     } catch (error) {
       console.error('Failed to load instruction:', error);
       alert('Не удалось загрузить инструкцию');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSaveInstruction = async () => {
+    if (!selectedInstruction) return;
+
+    setIsSaving(true);
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          path: 'update-instruction',
+          id: selectedInstruction.id,
+          title: editedTitle,
+          content: editedContent
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setSelectedInstruction({
+          ...selectedInstruction,
+          title: editedTitle,
+          content: editedContent
+        });
+        setIsEditing(false);
+        onInstructionUpdate?.();
+        alert('Инструкция успешно обновлена');
+      } else {
+        throw new Error(data.error || 'Unknown error');
+      }
+    } catch (error) {
+      console.error('Failed to save instruction:', error);
+      alert('Не удалось сохранить изменения');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditedContent(selectedInstruction?.content || '');
+    setEditedTitle(selectedInstruction?.title || '');
   };
 
   const handleDownloadWord = async () => {
@@ -274,10 +331,24 @@ export default function InstructionsCatalog({
         </div>
       )}
 
-      <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
+      <Dialog open={showPreviewDialog} onOpenChange={(open) => {
+        setShowPreviewDialog(open);
+        if (!open) {
+          setIsEditing(false);
+        }
+      }}>
         <DialogContent className="max-w-5xl max-h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>{selectedInstruction?.title}</DialogTitle>
+            {isEditing ? (
+              <Input
+                value={editedTitle}
+                onChange={(e) => setEditedTitle(e.target.value)}
+                className="text-lg font-semibold"
+                placeholder="Название инструкции"
+              />
+            ) : (
+              <DialogTitle>{selectedInstruction?.title}</DialogTitle>
+            )}
             <DialogDescription>
               {selectedInstruction?.profession} • {selectedInstruction?.industry}
             </DialogDescription>
@@ -286,28 +357,68 @@ export default function InstructionsCatalog({
           {selectedInstruction && (
             <div className="flex-1 overflow-y-auto">
               <Textarea
-                value={selectedInstruction.content || ''}
-                readOnly
-                className="min-h-[500px] font-mono text-sm"
+                value={isEditing ? editedContent : selectedInstruction.content || ''}
+                onChange={(e) => setEditedContent(e.target.value)}
+                readOnly={!isEditing}
+                className={`min-h-[500px] font-mono text-sm ${
+                  isEditing ? 'border-blue-300 focus:border-blue-500' : ''
+                }`}
               />
               
               <div className="flex gap-2 mt-4">
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={handleDownloadWord}
-                >
-                  <Icon name="Download" className="h-4 w-4 mr-2" />
-                  Скачать Word
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={handlePrint}
-                >
-                  <Icon name="Printer" className="h-4 w-4 mr-2" />
-                  Печать
-                </Button>
+                {isAdmin && !isEditing && (
+                  <Button 
+                    variant="default" 
+                    onClick={() => setIsEditing(true)}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Icon name="Edit" className="h-4 w-4 mr-2" />
+                    Редактировать
+                  </Button>
+                )}
+                
+                {isEditing && (
+                  <>
+                    <Button 
+                      variant="default" 
+                      onClick={handleSaveInstruction}
+                      disabled={isSaving}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <Icon name="Save" className="h-4 w-4 mr-2" />
+                      {isSaving ? 'Сохранение...' : 'Сохранить'}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={handleCancelEdit}
+                      disabled={isSaving}
+                    >
+                      <Icon name="X" className="h-4 w-4 mr-2" />
+                      Отмена
+                    </Button>
+                  </>
+                )}
+                
+                {!isEditing && (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={handleDownloadWord}
+                    >
+                      <Icon name="Download" className="h-4 w-4 mr-2" />
+                      Скачать Word
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={handlePrint}
+                    >
+                      <Icon name="Printer" className="h-4 w-4 mr-2" />
+                      Печать
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           )}

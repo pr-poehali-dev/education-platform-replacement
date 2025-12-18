@@ -4,7 +4,7 @@ import Icon from '@/components/ui/icon';
 import InstructionsCatalog from '@/components/InstructionsCatalog';
 import AIGenerator from '@/components/AIGenerator';
 
-const API_URL = 'https://functions.poehali.dev/26432853-bc16-442a-aabf-e90c33bae6c2';
+const API_URL = 'https://functions.poehali.dev/0f54b4eb-703c-4b13-9825-e72b135c9d1b';
 
 interface Instruction {
   id: string;
@@ -18,9 +18,10 @@ interface Instruction {
 
 interface CatalogPageProps {
   onBack: () => void;
+  isAdmin?: boolean;
 }
 
-export default function CatalogPage({ onBack }: CatalogPageProps) {
+export default function CatalogPage({ onBack, isAdmin = false }: CatalogPageProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedIndustry, setSelectedIndustry] = useState<string>('all');
   const [customTopicDialog, setCustomTopicDialog] = useState(false);
@@ -71,6 +72,8 @@ export default function CatalogPage({ onBack }: CatalogPageProps) {
           selectedIndustry={selectedIndustry}
           setSelectedIndustry={setSelectedIndustry}
           onGenerateClick={() => setCustomTopicDialog(true)}
+          isAdmin={isAdmin}
+          onInstructionUpdate={loadInstructions}
         />
       </main>
 

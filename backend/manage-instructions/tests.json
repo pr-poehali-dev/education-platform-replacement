@@ -1,0 +1,23 @@
+{
+  "tests": [
+    {
+      "name": "OPTIONS CORS preflight",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedHeaders": {
+        "Access-Control-Allow-Origin": "*"
+      }
+    },
+    {
+      "name": "GET instructions list",
+      "method": "GET",
+      "path": "/?path=instructions",
+      "expectedStatus": 200,
+      "expectedBody": {
+        "instructions": []
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
