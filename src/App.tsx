@@ -21,6 +21,7 @@ import TestsCatalogPage from '@/pages/TestsCatalogPage';
 import TestBuilder from '@/pages/TestBuilder';
 import TestRunner from '@/pages/TestRunner';
 import TestResultsHistory from '@/pages/TestResultsHistory';
+import ProtocolRegistry from '@/pages/ProtocolRegistry';
 
 type UserRole = 'admin' | 'listener' | null;
 
@@ -59,7 +60,8 @@ type CurrentView =
   | 'tests-catalog'
   | 'test-builder'
   | 'test-runner'
-  | 'test-results-history';
+  | 'test-results-history'
+  | 'protocol-registry';
 
 function App() {
   const [currentView, setCurrentView] = useState<CurrentView>('admin-auth');
@@ -181,7 +183,7 @@ function App() {
     setCurrentView('admin-home');
   };
 
-  const handleNavigateToSection = (section: 'catalog' | 'programs' | 'testing' | 'certificates' | 'documents' | 'analytics' | 'listeners' | 'admin-management' | 'video-management' | 'tests-catalog') => {
+  const handleNavigateToSection = (section: 'catalog' | 'programs' | 'testing' | 'certificates' | 'documents' | 'analytics' | 'listeners' | 'admin-management' | 'video-management' | 'tests-catalog' | 'protocol-registry') => {
     if (section === 'listeners') {
       setCurrentView('listeners-management');
     } else if (section === 'video-management') {
@@ -392,6 +394,7 @@ function App() {
           setCurrentView('test-runner');
         }}
         onViewHistory={() => setCurrentView('test-results-history')}
+        onViewProtocols={() => setCurrentView('protocol-registry')}
       />
     );
   }
@@ -410,6 +413,8 @@ function App() {
       <TestRunner 
         onBack={() => setCurrentView(userRole === 'listener' ? 'listener-dashboard' : 'tests-catalog')}
         testId={selectedTestId}
+        listenerName={listenerUser?.fullName}
+        listenerPosition={listenerUser?.position}
       />
     );
   }
@@ -417,6 +422,14 @@ function App() {
   if (currentView === 'test-results-history' && adminUser) {
     return (
       <TestResultsHistory 
+        onBack={() => setCurrentView('tests-catalog')}
+      />
+    );
+  }
+
+  if (currentView === 'protocol-registry' && adminUser) {
+    return (
+      <ProtocolRegistry 
         onBack={() => setCurrentView('tests-catalog')}
       />
     );

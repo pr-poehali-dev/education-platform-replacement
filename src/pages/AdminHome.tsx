@@ -17,7 +17,7 @@ interface AdminHomeProps {
     role: 'ot' | 'pb' | 'superadmin';
   };
   onLogout: () => void;
-  onNavigate: (section: 'catalog' | 'programs' | 'testing' | 'certificates' | 'documents' | 'analytics' | 'listeners' | 'admin-management' | 'video-management' | 'tests-catalog') => void;
+  onNavigate: (section: 'catalog' | 'programs' | 'testing' | 'certificates' | 'documents' | 'analytics' | 'listeners' | 'admin-management' | 'video-management' | 'tests-catalog' | 'protocol-registry') => void;
 }
 
 export default function AdminHome({ user, onLogout, onNavigate }: AdminHomeProps) {
@@ -120,6 +120,14 @@ export default function AdminHome({ user, onLogout, onNavigate }: AdminHomeProps
       icon: 'BookCheck',
       color: 'from-pink-500 to-rose-500',
       stats: '0 тестов'
+    },
+    {
+      id: 'protocol-registry',
+      title: 'Реестр протоколов',
+      description: 'Учет всех проведенных тестирований и результатов',
+      icon: 'FileText',
+      color: 'from-blue-600 to-indigo-600',
+      stats: '0 протоколов'
     },
     {
       id: 'certificates',

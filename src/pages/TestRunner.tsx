@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 interface TestRunnerProps {
   onBack: () => void;
   testId: string;
+  listenerName?: string;
+  listenerPosition?: string;
 }
 
 type QuestionType = 'single' | 'multiple' | 'text';
@@ -60,7 +62,20 @@ interface TestResult {
   answers: UserAnswer[];
 }
 
-export default function TestRunner({ onBack, testId }: TestRunnerProps) {
+interface ProtocolRecord {
+  id: string;
+  protocolNumber: string;
+  testId: string;
+  testTitle: string;
+  listenerName?: string;
+  listenerPosition?: string;
+  percentage: number;
+  passed: boolean;
+  completedAt: string;
+  createdAt: string;
+}
+
+export default function TestRunner({ onBack, testId, listenerName, listenerPosition }: TestRunnerProps) {
   const [test, setTest] = useState<Test | null>(null);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Map<string, UserAnswer>>(new Map());
@@ -71,6 +86,7 @@ export default function TestRunner({ onBack, testId }: TestRunnerProps) {
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [timerEnabled, setTimerEnabled] = useState(true);
   const [showProtocol, setShowProtocol] = useState(false);
+  const [protocolNumber, setProtocolNumber] = useState<string>('');
 
   useEffect(() => {
     loadTest();
@@ -191,11 +207,47 @@ export default function TestRunner({ onBack, testId }: TestRunnerProps) {
     saveResult(testResult);
   };
 
+  const generateProtocolNumber = (): string => {
+    const registry = localStorage.getItem('protocol_registry');
+    const records: ProtocolRecord[] = registry ? JSON.parse(registry) : [];
+    
+    const year = new Date().getFullYear();
+    const yearRecords = records.filter(r => r.protocolNumber.startsWith(`${year}-`));
+    const nextNumber = yearRecords.length + 1;
+    
+    return `${year}-${String(nextNumber).padStart(4, '0')}`;
+  };
+
+  const saveToProtocolRegistry = (result: TestResult, protocolNum: string) => {
+    const registry = localStorage.getItem('protocol_registry');
+    const records: ProtocolRecord[] = registry ? JSON.parse(registry) : [];
+    
+    const newRecord: ProtocolRecord = {
+      id: `protocol_${Date.now()}`,
+      protocolNumber: protocolNum,
+      testId: result.testId,
+      testTitle: result.testTitle,
+      listenerName: listenerName,
+      listenerPosition: listenerPosition,
+      percentage: result.percentage,
+      passed: result.passed,
+      completedAt: result.completedAt,
+      createdAt: new Date().toISOString()
+    };
+    
+    records.push(newRecord);
+    localStorage.setItem('protocol_registry', JSON.stringify(records));
+  };
+
   const saveResult = (result: TestResult) => {
     const savedResults = localStorage.getItem('test_results');
     const results: TestResult[] = savedResults ? JSON.parse(savedResults) : [];
     results.push(result);
     localStorage.setItem('test_results', JSON.stringify(results));
+    
+    const protocolNum = generateProtocolNumber();
+    setProtocolNumber(protocolNum);
+    saveToProtocolRegistry(result, protocolNum);
   };
 
   const formatTime = (seconds: number): string => {
@@ -493,7 +545,7 @@ export default function TestRunner({ onBack, testId }: TestRunnerProps) {
             <div className="text-center space-y-2 border-b-2 border-black pb-4">
               <h1 className="text-2xl font-bold uppercase">ПРОТОКОЛ</h1>
               <p className="text-lg">проверки знаний требований охраны труда</p>
-              <p className="text-sm">№ {Math.floor(Math.random() * 10000)} от {new Date().toLocaleDateString('ru-RU')}</p>
+              <p className="text-sm">№ {protocolNumber} от {new Date().toLocaleDateString('ru-RU')}</p>
             </div>
 
             <div className="space-y-3">
@@ -501,6 +553,20 @@ export default function TestRunner({ onBack, testId }: TestRunnerProps) {
                 <span className="font-medium">Организация:</span>
                 <span>АО "ГРК "Западная""</span>
               </div>
+              {listenerName && (
+                <>
+                  <div className="grid grid-cols-[150px,1fr] gap-2">
+                    <span className="font-medium">ФИО слушателя:</span>
+                    <span>{listenerName}</span>
+                  </div>
+                  {listenerPosition && (
+                    <div className="grid grid-cols-[150px,1fr] gap-2">
+                      <span className="font-medium">Должность:</span>
+                      <span>{listenerPosition}</span>
+                    </div>
+                  )}
+                </>
+              )}
               <div className="grid grid-cols-[150px,1fr] gap-2">
                 <span className="font-medium">Название теста:</span>
                 <span>{test.title}</span>

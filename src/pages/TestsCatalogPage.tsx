@@ -12,6 +12,7 @@ interface TestsCatalogPageProps {
   onEditTest: (testId: string) => void;
   onRunTest: (testId: string) => void;
   onViewHistory: () => void;
+  onViewProtocols?: () => void;
 }
 
 type TestCategory = 
@@ -82,7 +83,7 @@ const getCategoryColor = (category: TestCategory): string => {
   return colors[category];
 };
 
-export default function TestsCatalogPage({ onBack, onCreateTest, onEditTest, onRunTest, onViewHistory }: TestsCatalogPageProps) {
+export default function TestsCatalogPage({ onBack, onCreateTest, onEditTest, onRunTest, onViewHistory, onViewProtocols }: TestsCatalogPageProps) {
   const [tests, setTests] = useState<Test[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedTopic, setSelectedTopic] = useState<string>('all');
@@ -142,6 +143,12 @@ export default function TestsCatalogPage({ onBack, onCreateTest, onEditTest, onR
                 <Icon name="BarChart3" className="h-4 w-4 mr-2" />
                 История прохождений
               </Button>
+              {onViewProtocols && (
+                <Button onClick={onViewProtocols} variant="outline">
+                  <Icon name="FileText" className="h-4 w-4 mr-2" />
+                  Реестр протоколов
+                </Button>
+              )}
               <Button onClick={onCreateTest} className="bg-gradient-to-r from-purple-600 to-pink-500">
                 <Icon name="Plus" className="h-4 w-4 mr-2" />
                 Создать тест
