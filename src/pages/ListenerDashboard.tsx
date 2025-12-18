@@ -38,9 +38,10 @@ interface ListenerDashboardProps {
   onStartLearning?: (programId: string) => void;
   onNavigateToVideos?: () => void;
   onStartTest?: (testId: string) => void;
+  onStartTraining?: () => void;
 }
 
-export default function ListenerDashboard({ listener, onLogout, onStartLearning, onNavigateToVideos, onStartTest }: ListenerDashboardProps) {
+export default function ListenerDashboard({ listener, onLogout, onStartLearning, onNavigateToVideos, onStartTest, onStartTraining }: ListenerDashboardProps) {
   const [activeTab, setActiveTab] = useState('my-page');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [testMode, setTestMode] = useState<'practice' | 'exam' | null>(null);
@@ -978,19 +979,48 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
           </TabsContent>
 
           <TabsContent value="testing">
-            <TestingInterface
-              testMode={testMode}
-              testSession={testSession}
-              onStartTest={startTest}
-              onAnswerQuestion={answerQuestion}
-              onNextQuestion={nextQuestion}
-              onPrevQuestion={prevQuestion}
-              onFinishTest={finishTest}
-              showProtocol={showProtocol}
-              setShowProtocol={setShowProtocol}
-              protocolData={protocolData}
-              currentUser={{ name: listener.fullName, role: 'student', position: listener.position }}
-            />
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">Блок тестирования</h2>
+                  <p className="text-muted-foreground">Экзамены и тренировочный режим</p>
+                </div>
+                {assignedTests.length > 0 && (
+                  <Button 
+                    onClick={onStartTraining}
+                    className="bg-gradient-to-r from-blue-600 to-cyan-500"
+                  >
+                    <Icon name="Dumbbell" className="h-4 w-4 mr-2" />
+                    Тренировочный режим
+                  </Button>
+                )}
+              </div>
+
+              {assignedTests.length === 0 ? (
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center py-8">
+                      <Icon name="FileX" className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-muted-foreground">Тесты пока не назначены</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <TestingInterface
+                  testMode={testMode}
+                  testSession={testSession}
+                  onStartTest={startTest}
+                  onAnswerQuestion={answerQuestion}
+                  onNextQuestion={nextQuestion}
+                  onPrevQuestion={prevQuestion}
+                  onFinishTest={finishTest}
+                  showProtocol={showProtocol}
+                  setShowProtocol={setShowProtocol}
+                  protocolData={protocolData}
+                  currentUser={{ name: listener.fullName, role: 'student', position: listener.position }}
+                />
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="progress">

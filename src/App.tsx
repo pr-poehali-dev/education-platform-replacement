@@ -22,6 +22,7 @@ import TestBuilder from '@/pages/TestBuilder';
 import TestRunner from '@/pages/TestRunner';
 import TestResultsHistory from '@/pages/TestResultsHistory';
 import ProtocolRegistry from '@/pages/ProtocolRegistry';
+import TrainingMode from '@/pages/TrainingMode';
 
 type UserRole = 'admin' | 'listener' | null;
 
@@ -61,7 +62,8 @@ type CurrentView =
   | 'test-builder'
   | 'test-runner'
   | 'test-results-history'
-  | 'protocol-registry';
+  | 'protocol-registry'
+  | 'training-mode';
 
 function App() {
   const [currentView, setCurrentView] = useState<CurrentView>('admin-auth');
@@ -310,6 +312,7 @@ function App() {
           setSelectedTestId(testId);
           setCurrentView('test-runner');
         }}
+        onStartTraining={() => setCurrentView('training-mode')}
       />
     );
   }
@@ -431,6 +434,28 @@ function App() {
     return (
       <ProtocolRegistry 
         onBack={() => setCurrentView('tests-catalog')}
+      />
+    );
+  }
+
+  if (currentView === 'training-mode' && listenerUser?.listenerId) {
+    const savedTests = localStorage.getItem(`listener_tests_${listenerUser.listenerId}`);
+    const allTests = localStorage.getItem('tests_catalog');
+    
+    let assignedTests: any[] = [];
+    if (savedTests && allTests) {
+      const testIds = JSON.parse(savedTests);
+      const testsData = JSON.parse(allTests);
+      assignedTests = testIds
+        .map((id: string) => testsData.find((t: any) => t.id === id))
+        .filter(Boolean);
+    }
+
+    return (
+      <TrainingMode
+        onBack={() => setCurrentView('listener-dashboard')}
+        listenerId={listenerUser.listenerId}
+        assignedTests={assignedTests}
       />
     );
   }
