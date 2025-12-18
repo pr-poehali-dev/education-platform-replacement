@@ -304,6 +304,10 @@ function App() {
           setCurrentView('module-learning');
         }}
         onNavigateToVideos={() => setCurrentView('video-library')}
+        onStartTest={(testId) => {
+          setSelectedTestId(testId);
+          setCurrentView('test-runner');
+        }}
       />
     );
   }

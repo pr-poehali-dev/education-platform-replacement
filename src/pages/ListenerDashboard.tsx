@@ -37,9 +37,10 @@ interface ListenerDashboardProps {
   onLogout: () => void;
   onStartLearning?: (programId: string) => void;
   onNavigateToVideos?: () => void;
+  onStartTest?: (testId: string) => void;
 }
 
-export default function ListenerDashboard({ listener, onLogout, onStartLearning, onNavigateToVideos }: ListenerDashboardProps) {
+export default function ListenerDashboard({ listener, onLogout, onStartLearning, onNavigateToVideos, onStartTest }: ListenerDashboardProps) {
   const [activeTab, setActiveTab] = useState('my-page');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [testMode, setTestMode] = useState<'practice' | 'exam' | null>(null);
@@ -52,6 +53,7 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
   const [showProtocol, setShowProtocol] = useState(false);
   const [protocolData, setProtocolData] = useState<any>(null);
   const [assignedPrograms, setAssignedPrograms] = useState<any[]>([]);
+  const [assignedTests, setAssignedTests] = useState<any[]>([]);
 
   const certificates: any[] = [];
 
@@ -80,6 +82,37 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
           .filter(Boolean);
         
         setAssignedPrograms(programs);
+      }
+
+      const savedTests = localStorage.getItem(`listener_tests_${listener.listenerId}`);
+      const allTests = localStorage.getItem('tests_catalog');
+      
+      if (savedTests && allTests) {
+        const testIds = JSON.parse(savedTests);
+        const testsData = JSON.parse(allTests);
+        
+        const tests = testIds
+          .map((id: string) => testsData.find((t: any) => t.id === id))
+          .filter(Boolean)
+          .map((test: any) => {
+            const results = localStorage.getItem('test_results');
+            let lastResult = null;
+            if (results) {
+              const allResults = JSON.parse(results);
+              const testResults = allResults.filter((r: any) => r.testId === test.id);
+              if (testResults.length > 0) {
+                lastResult = testResults[testResults.length - 1];
+              }
+            }
+            
+            return {
+              ...test,
+              lastResult,
+              attempts: results ? JSON.parse(results).filter((r: any) => r.testId === test.id).length : 0
+            };
+          });
+        
+        setAssignedTests(tests);
       }
     }
   }, [listener.listenerId]);
@@ -303,12 +336,12 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
                 <Card>
                   <CardHeader>
                     <div className="flex items-center gap-3">
-                      <div className="bg-gradient-to-br from-yellow-500 to-orange-500 p-3 rounded-xl">
-                        <Icon name="Award" className="h-6 w-6 text-white" />
+                      <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-3 rounded-xl">
+                        <Icon name="FileCheck" className="h-6 w-6 text-white" />
                       </div>
                       <div>
-                        <CardDescription>Сертификатов получено</CardDescription>
-                        <CardTitle className="text-3xl">{certificates.length}</CardTitle>
+                        <CardDescription>Тестов назначено</CardDescription>
+                        <CardTitle className="text-3xl">{assignedTests.length}</CardTitle>
                       </div>
                     </div>
                   </CardHeader>
@@ -442,6 +475,76 @@ export default function ListenerDashboard({ listener, onLogout, onStartLearning,
                                 <Button size="sm" className="w-full mt-3" variant="outline">
                                   <Icon name="Play" className="h-3 w-3 mr-1" />
                                   Начать
+                                </Button>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {assignedTests.length > 0 && (
+                <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Icon name="FileCheck" className="h-5 w-5 text-purple-600" />
+                      Назначенные тесты
+                    </CardTitle>
+                    <CardDescription>Пройдите тесты для проверки знаний</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-3">
+                      {assignedTests.map((test) => (
+                        <Card 
+                          key={test.id} 
+                          className="hover:shadow-md transition-all cursor-pointer border-2 hover:border-purple-300"
+                          onClick={() => onStartTest?.(test.id)}
+                        >
+                          <CardContent className="pt-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3 flex-1">
+                                <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-3 rounded-xl">
+                                  <Icon name="FileCheck" className="h-6 w-6 text-white" />
+                                </div>
+                                <div className="flex-1">
+                                  <p className="font-semibold">{test.title}</p>
+                                  <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                                    <span className="flex items-center gap-1">
+                                      <Icon name="FileQuestion" className="h-3 w-3" />
+                                      {test.questionCount} вопросов
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <Icon name="Clock" className="h-3 w-3" />
+                                      {test.duration} мин
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <Icon name="Target" className="h-3 w-3" />
+                                      {test.passingScore}% проходной
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                {test.lastResult ? (
+                                  <div className="text-right">
+                                    <Badge 
+                                      className={test.lastResult.passed ? 'bg-green-600' : 'bg-red-600'}
+                                    >
+                                      {test.lastResult.percentage}%
+                                    </Badge>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      Попыток: {test.attempts}
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <Badge variant="outline">Не пройден</Badge>
+                                )}
+                                <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
+                                  <Icon name="Play" className="h-4 w-4 mr-1" />
+                                  {test.lastResult ? 'Пройти заново' : 'Начать'}
                                 </Button>
                               </div>
                             </div>
