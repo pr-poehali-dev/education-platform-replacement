@@ -368,7 +368,7 @@ export default function AdminDashboard({ user, onLogout, onSwitchToListener, onM
                     color: 'from-blue-500 to-indigo-500'
                   }
                 ].map((program, idx) => (
-                  <Card key={idx} className="group hover:shadow-lg transition-shadow">
+                  <Card key={idx} className="group hover:shadow-lg hover:scale-105 transition-all duration-300">
                     <CardHeader>
                       <div className="flex items-start justify-between">
                         <div className={`bg-gradient-to-br ${program.color} p-3 rounded-xl`}>
