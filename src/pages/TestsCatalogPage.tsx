@@ -10,6 +10,7 @@ interface TestsCatalogPageProps {
   onBack: () => void;
   onCreateTest: () => void;
   onEditTest: (testId: string) => void;
+  onRunTest: (testId: string) => void;
 }
 
 type TestCategory = 
@@ -80,7 +81,7 @@ const getCategoryColor = (category: TestCategory): string => {
   return colors[category];
 };
 
-export default function TestsCatalogPage({ onBack, onCreateTest, onEditTest }: TestsCatalogPageProps) {
+export default function TestsCatalogPage({ onBack, onCreateTest, onEditTest, onRunTest }: TestsCatalogPageProps) {
   const [tests, setTests] = useState<Test[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedTopic, setSelectedTopic] = useState<string>('all');
@@ -221,7 +222,7 @@ export default function TestsCatalogPage({ onBack, onCreateTest, onEditTest }: T
           {filteredTests.length > 0 && (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredTests.map((test) => (
-                <Card key={test.id} className="hover:shadow-lg transition-shadow">
+                <Card key={test.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => onRunTest(test.id)}>
                   <CardHeader>
                     <div className="flex items-start justify-between mb-2">
                       <Icon name={getCategoryIcon(test.category)} className="h-8 w-8 text-primary" />
@@ -254,10 +255,23 @@ export default function TestsCatalogPage({ onBack, onCreateTest, onEditTest }: T
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            onClick={() => onEditTest(test.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onRunTest(test.id);
+                            }}
                           >
-                            <Icon name="Edit" className="h-4 w-4 mr-1" />
-                            Открыть
+                            <Icon name="Play" className="h-4 w-4 mr-1" />
+                            Пройти
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEditTest(test.id);
+                            }}
+                          >
+                            <Icon name="Edit" className="h-4 w-4" />
                           </Button>
                           <Button 
                             variant="ghost" 

@@ -19,6 +19,7 @@ import VideoLibrary from '@/pages/VideoLibrary';
 import VideoPlayerPage from '@/pages/VideoPlayer';
 import TestsCatalogPage from '@/pages/TestsCatalogPage';
 import TestBuilder from '@/pages/TestBuilder';
+import TestRunner from '@/pages/TestRunner';
 
 type UserRole = 'admin' | 'listener' | null;
 
@@ -55,7 +56,8 @@ type CurrentView =
   | 'video-library'
   | 'video-player'
   | 'tests-catalog'
-  | 'test-builder';
+  | 'test-builder'
+  | 'test-runner';
 
 function App() {
   const [currentView, setCurrentView] = useState<CurrentView>('admin-auth');
@@ -379,6 +381,10 @@ function App() {
           setSelectedTestId(testId);
           setCurrentView('test-builder');
         }}
+        onRunTest={(testId) => {
+          setSelectedTestId(testId);
+          setCurrentView('test-runner');
+        }}
       />
     );
   }
@@ -388,6 +394,15 @@ function App() {
       <TestBuilder 
         onBack={() => setCurrentView('tests-catalog')}
         testId={selectedTestId || undefined}
+      />
+    );
+  }
+
+  if (currentView === 'test-runner' && selectedTestId) {
+    return (
+      <TestRunner 
+        onBack={() => setCurrentView('tests-catalog')}
+        testId={selectedTestId}
       />
     );
   }
