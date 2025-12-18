@@ -18,6 +18,7 @@ import VideoManagement from '@/pages/VideoManagement';
 import VideoLibrary from '@/pages/VideoLibrary';
 import VideoPlayerPage from '@/pages/VideoPlayer';
 import TestsCatalogPage from '@/pages/TestsCatalogPage';
+import TestBuilder from '@/pages/TestBuilder';
 
 type UserRole = 'admin' | 'listener' | null;
 
@@ -53,7 +54,8 @@ type CurrentView =
   | 'video-management'
   | 'video-library'
   | 'video-player'
-  | 'tests-catalog';
+  | 'tests-catalog'
+  | 'test-builder';
 
 function App() {
   const [currentView, setCurrentView] = useState<CurrentView>('admin-auth');
@@ -63,6 +65,7 @@ function App() {
   const [listenerUser, setListenerUser] = useState<ListenerUser | null>(null);
   const [selectedListenerId, setSelectedListenerId] = useState<string | null>(null);
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
+  const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
 
   useEffect(() => {
     // Проверяем hash для прямого входа слушателя
@@ -365,7 +368,28 @@ function App() {
   }
 
   if (currentView === 'tests-catalog' && adminUser) {
-    return <TestsCatalogPage onBack={handleBackToAdminHome} />;
+    return (
+      <TestsCatalogPage 
+        onBack={handleBackToAdminHome}
+        onCreateTest={() => {
+          setSelectedTestId(null);
+          setCurrentView('test-builder');
+        }}
+        onEditTest={(testId) => {
+          setSelectedTestId(testId);
+          setCurrentView('test-builder');
+        }}
+      />
+    );
+  }
+
+  if (currentView === 'test-builder' && adminUser) {
+    return (
+      <TestBuilder 
+        onBack={() => setCurrentView('tests-catalog')}
+        testId={selectedTestId || undefined}
+      />
+    );
   }
 
   return <AdminAuth onLogin={handleAdminLogin} />;

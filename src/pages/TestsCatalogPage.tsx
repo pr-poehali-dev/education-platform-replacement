@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 
 interface TestsCatalogPageProps {
   onBack: () => void;
+  onCreateTest: () => void;
+  onEditTest: (testId: string) => void;
 }
 
 type TestCategory = 
@@ -78,7 +80,7 @@ const getCategoryColor = (category: TestCategory): string => {
   return colors[category];
 };
 
-export default function TestsCatalogPage({ onBack }: TestsCatalogPageProps) {
+export default function TestsCatalogPage({ onBack, onCreateTest, onEditTest }: TestsCatalogPageProps) {
   const [tests, setTests] = useState<Test[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedTopic, setSelectedTopic] = useState<string>('all');
@@ -102,12 +104,16 @@ export default function TestsCatalogPage({ onBack }: TestsCatalogPageProps) {
     return true;
   });
 
-  const handleCreateTest = () => {
-    alert('Функция создания теста будет реализована');
-  };
-
-  const handleEditTest = (testId: string) => {
-    alert(`Редактирование теста ${testId} будет реализовано`);
+  const handleDeleteTest = (testId: string) => {
+    if (confirm('Удалить этот тест?')) {
+      const savedTests = localStorage.getItem('tests_catalog');
+      if (savedTests) {
+        const tests = JSON.parse(savedTests);
+        const filtered = tests.filter((t: Test) => t.id !== testId);
+        localStorage.setItem('tests_catalog', JSON.stringify(filtered));
+        loadTests();
+      }
+    }
   };
 
   return (
@@ -129,7 +135,7 @@ export default function TestsCatalogPage({ onBack }: TestsCatalogPageProps) {
                 <p className="text-xs text-muted-foreground">Разработка и управление тестами</p>
               </div>
             </div>
-            <Button onClick={handleCreateTest} className="bg-gradient-to-r from-purple-600 to-pink-500">
+            <Button onClick={onCreateTest} className="bg-gradient-to-r from-purple-600 to-pink-500">
               <Icon name="Plus" className="h-4 w-4 mr-2" />
               Создать тест
             </Button>
@@ -205,7 +211,7 @@ export default function TestsCatalogPage({ onBack }: TestsCatalogPageProps) {
             <div className="text-center py-12">
               <Icon name="FileX" className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground mb-4">Тестов не найдено</p>
-              <Button onClick={handleCreateTest} variant="outline">
+              <Button onClick={onCreateTest} variant="outline">
                 <Icon name="Plus" className="h-4 w-4 mr-2" />
                 Создать первый тест
               </Button>
@@ -244,14 +250,26 @@ export default function TestsCatalogPage({ onBack }: TestsCatalogPageProps) {
                         <span className="text-xs">
                           Обновлено: {new Date(test.lastUpdated).toLocaleDateString('ru-RU')}
                         </span>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleEditTest(test.id)}
-                        >
-                          <Icon name="Edit" className="h-4 w-4 mr-1" />
-                          Открыть
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => onEditTest(test.id)}
+                          >
+                            <Icon name="Edit" className="h-4 w-4 mr-1" />
+                            Открыть
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteTest(test.id);
+                            }}
+                          >
+                            <Icon name="Trash2" className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </CardContent>
